@@ -6,10 +6,10 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
-    path: Assets/Scenes/Main Menu.unity
+    path: Assets/Cainos/Scenes/Main Menu.unity
     guid: 8c9cfa26abfee488c85f1582747f6a02
   - enabled: 1
-    path: Assets/Cainos/Pixel Art Top Down - Village/Scene/Village Stage.unity
+    path: Assets/Cainos/Scenes/Scenes/Village Stage.unity
     guid: abe168e2ecfdb2940bb8bb18056a96da
   m_configObjects: {}
   m_UseUCBPForAssetBundles: 0

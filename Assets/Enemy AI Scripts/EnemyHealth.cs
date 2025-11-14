@@ -1,8 +1,5 @@
-using UnityEngine;
+﻿using UnityEngine;
 using System.Collections;
-
-// Keep EnemyColor in a separate file (EnemyEnums.cs) to avoid duplicate-enum errors.
-// public enum EnemyColor { Red, Blue, Green, Yellow }
 
 public enum EnemyState { Alive, DownedColor, Dead }
 
@@ -15,22 +12,27 @@ public class EnemyHealth : MonoBehaviour
 
     [Header("Visuals")]
     public SpriteRenderer spriteRenderer;
-    public float flashInterval = 0.3f;   // flash speed while downed
+    public float flashInterval = 0.2f;
 
     [Header("Downed State")]
-    public float downedDuration = 3f;    // how long the downed window lasts
+    public float downedDuration = 3f;
 
     [Header("Death Handling")]
     public bool destroyRoot = true;
     public float destroyDelay = 0f;
 
+    [Header("Drops")]
+    public GameObject lightningDropPrefab;   // ⚡ assign in Inspector
+
     private int currentHealth;
     private EnemyState state = EnemyState.Alive;
     private bool dead;
 
-    private Color baseColor;             // original sprite color (no default tint)
+    private Color originalColor;
     private Coroutine downedRoutine;
     private Coroutine flashRoutine;
+
+    private SpriteRenderer outlineRenderer;
 
     public bool IsDowned => state == EnemyState.DownedColor;
 
@@ -41,36 +43,33 @@ public class EnemyHealth : MonoBehaviour
         if (spriteRenderer == null)
             spriteRenderer = GetComponentInChildren<SpriteRenderer>();
 
-        if (spriteRenderer != null)
-            baseColor = spriteRenderer.color; // ✅ keep original color
-        else
-            baseColor = Color.white;
+        originalColor = spriteRenderer != null ? spriteRenderer.color : Color.white;
+
+        GameObject outlineObj = new GameObject("Outline");
+        outlineObj.transform.SetParent(spriteRenderer.transform);
+        outlineObj.transform.localPosition = Vector3.zero;
+
+        outlineRenderer = outlineObj.AddComponent<SpriteRenderer>();
+        outlineRenderer.sprite = spriteRenderer.sprite;
+        outlineRenderer.sortingLayerID = spriteRenderer.sortingLayerID;
+        outlineRenderer.sortingOrder = spriteRenderer.sortingOrder - 1;
+        outlineRenderer.enabled = false;
     }
 
     public void TakeDamage(int amount, EnemyColor? projectileColor = null)
     {
-        // Safe logging for nullable enum
-        string projStr = projectileColor.HasValue ? projectileColor.Value.ToString() : "None";
-        Debug.Log($"[{name}] TakeDamage | State={state} | ProjectileColor={projStr}");
-
         if (dead) return;
 
-        switch (state)
+        if (state == EnemyState.Alive)
         {
-            case EnemyState.Alive:
-                currentHealth -= amount;
-                if (currentHealth <= 0)
-                    EnterDownedColor();
-                break;
-
-            case EnemyState.DownedColor:
-                // Only the matching color kills while downed
-                if (projectileColor.HasValue && projectileColor.Value == enemyColor)
-                {
-                    Debug.Log($"[{name}] Correct color match! Dying...");
-                    Die();
-                }
-                break;
+            currentHealth -= amount;
+            if (currentHealth <= 0)
+                EnterDownedColor();
+        }
+        else if (state == EnemyState.DownedColor)
+        {
+            if (projectileColor.HasValue && projectileColor.Value == enemyColor)
+                Die();
         }
     }
 
@@ -78,14 +77,11 @@ public class EnemyHealth : MonoBehaviour
     {
         if (state == EnemyState.DownedColor) return;
 
-        Debug.Log($"[{name}] Entered DownedColor state.");
         state = EnemyState.DownedColor;
 
-        // timers
         if (downedRoutine != null) StopCoroutine(downedRoutine);
         downedRoutine = StartCoroutine(DownedTimer());
 
-        // visual flash (brighten, not hide)
         if (flashRoutine != null) StopCoroutine(flashRoutine);
         flashRoutine = StartCoroutine(FlashEffect());
     }
@@ -98,35 +94,35 @@ public class EnemyHealth : MonoBehaviour
 
     private IEnumerator FlashEffect()
     {
-        // Brighten original color consistently for all sprites
-        Color bright = baseColor * 2.2f;
-        bright.r = Mathf.Clamp01(bright.r);
-        bright.g = Mathf.Clamp01(bright.g);
-        bright.b = Mathf.Clamp01(bright.b);
-        bright.a = 1f;
+        Color flashColor = GetBrightColor(enemyColor);
+        outlineRenderer.color = flashColor;
 
-        float t = 0f;
+        float scaleUp = 1.15f;
+
         while (state == EnemyState.DownedColor)
         {
-            bool on = (Mathf.FloorToInt(t / flashInterval) % 2 == 0);
-            if (spriteRenderer) spriteRenderer.color = on ? bright : baseColor;
+            spriteRenderer.color = flashColor;
+            outlineRenderer.enabled = true;
+            outlineRenderer.transform.localScale = Vector3.one * scaleUp;
+            yield return new WaitForSeconds(flashInterval);
 
-            t += Time.deltaTime;
-            yield return null;
+            spriteRenderer.color = originalColor;
+            outlineRenderer.enabled = false;
+            yield return new WaitForSeconds(flashInterval);
         }
 
-        // Reset color on exit
-        if (spriteRenderer) spriteRenderer.color = baseColor;
+        spriteRenderer.color = originalColor;
+        outlineRenderer.enabled = false;
     }
 
     private void Revive()
     {
-        Debug.Log($"[{name}] Revived to Alive state.");
         state = EnemyState.Alive;
         currentHealth = maxHealth;
 
-        if (flashRoutine != null) { StopCoroutine(flashRoutine); flashRoutine = null; }
-        if (spriteRenderer) spriteRenderer.color = baseColor;
+        if (flashRoutine != null) StopCoroutine(flashRoutine);
+        spriteRenderer.color = originalColor;
+        outlineRenderer.enabled = false;
     }
 
     private void Die()
@@ -134,11 +130,16 @@ public class EnemyHealth : MonoBehaviour
         state = EnemyState.Dead;
         dead = true;
 
-        if (downedRoutine != null) { StopCoroutine(downedRoutine); downedRoutine = null; }
-        if (flashRoutine != null) { StopCoroutine(flashRoutine); flashRoutine = null; }
+        if (downedRoutine != null) StopCoroutine(downedRoutine);
+        if (flashRoutine != null) StopCoroutine(flashRoutine);
 
-        // Disable hit + physics
-        foreach (var col in GetComponentsInChildren<Collider2D>()) col.enabled = false;
+        // ⚡ Spawn the lightning drop BEFORE hiding the enemy
+        if (lightningDropPrefab != null)
+            Instantiate(lightningDropPrefab, transform.position, Quaternion.identity);
+
+        // Disable collisions
+        foreach (var col in GetComponentsInChildren<Collider2D>())
+            col.enabled = false;
 
         var rb = GetComponentInChildren<Rigidbody2D>();
         if (rb != null)
@@ -147,10 +148,32 @@ public class EnemyHealth : MonoBehaviour
             rb.simulated = false;
         }
 
-        // Optional: hide immediately (or keep visible until destroyDelay)
-        foreach (var sr in GetComponentsInChildren<SpriteRenderer>()) sr.enabled = false;
+        // Hide sprites AFTER dropping
+        foreach (var sr in GetComponentsInChildren<SpriteRenderer>())
+            sr.enabled = false;
 
         GameObject target = destroyRoot ? transform.root.gameObject : gameObject;
         Destroy(target, destroyDelay);
+    }
+
+    private Color GetBrightColor(EnemyColor c)
+    {
+        Color baseC;
+        switch (c)
+        {
+            case EnemyColor.Red: baseC = Color.red; break;
+            case EnemyColor.Blue: baseC = Color.blue; break;
+            case EnemyColor.Green: baseC = Color.green; break;
+            case EnemyColor.Yellow: baseC = Color.yellow; break;
+            default: baseC = Color.white; break;
+        }
+
+        baseC *= 6f;
+        baseC.r = Mathf.Clamp01(baseC.r);
+        baseC.g = Mathf.Clamp01(baseC.g);
+        baseC.b = Mathf.Clamp01(baseC.b);
+        baseC.a = 1f;
+
+        return baseC;
     }
 }
