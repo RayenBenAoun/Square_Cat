@@ -6,8 +6,11 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
-    path: Assets/Cainos/Scenes/Main Menu.unity
-    guid: 8c9cfa26abfee488c85f1582747f6a02
+    path: Assets/Cainos/Scenes/Scenes/Intro.unity
+    guid: 01a26799102484a2ebfe5230f7561028
+  - enabled: 1
+    path: Assets/Cainos/Scenes/Scenes/Main Menu.unity
+    guid: 15156a67e972353428148855553121c8
   - enabled: 1
     path: Assets/Cainos/Scenes/Scenes/Collosuem.unity
     guid: abe168e2ecfdb2940bb8bb18056a96da
