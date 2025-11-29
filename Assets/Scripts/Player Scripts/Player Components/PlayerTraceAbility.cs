@@ -48,13 +48,11 @@ public class PlayerOutline : MonoBehaviour
         lr.endWidth = lineWidth;
         lr.material = new Material(Shader.Find("Sprites/Default"));
         currentDrawTime = maxDrawTime;
+        resourceBar.maxValue = maxDrawTime;
     }
 
     void Update()
     {
-        if (resourceBar != null)
-            resourceBar.value = currentDrawTime;
-
         if (shapeActive)
         {
             shapeTimer -= Time.deltaTime;
@@ -87,6 +85,13 @@ public class PlayerOutline : MonoBehaviour
             EndDraw();
         else if (!drawing)
             RegenerateResource();
+        UpdateResourceUI();
+    }
+
+    void UpdateResourceUI()
+    {
+        if (resourceBar != null)
+            resourceBar.value = currentDrawTime;
     }
 
     void StartDraw()
