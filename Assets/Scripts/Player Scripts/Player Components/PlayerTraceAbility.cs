@@ -17,19 +17,20 @@ public class PlayerOutline : MonoBehaviour
     public bool spikedWallsUpgrade = false;
     public bool stunWallsUpgrade = false;
     public bool spikeShotUpgrade = false;
+    public bool durationUpgrade = false;
     public bool autoCloseShape = false;
 
     [Header("Resource")]
     public float maxDrawTime = 5f;
-    private float currentDrawTime;
     public float regenRate = 1f;
     public Slider resourceBar;
 
     [Header("Cover & Combat")]
-    public float coverLifetime = 3f;
+    public float coverLifetime = 3f;   // base lifetime
     public int damageOnClose = 1;
     public GameObject spikePrefab;
 
+    private float currentDrawTime;
     private LineRenderer lr;
     private readonly List<Vector2> points = new List<Vector2>();
     private float pathLength = 0f;
@@ -47,30 +48,42 @@ public class PlayerOutline : MonoBehaviour
         lr.startWidth = lineWidth;
         lr.endWidth = lineWidth;
         lr.material = new Material(Shader.Find("Sprites/Default"));
+
         currentDrawTime = maxDrawTime;
-        resourceBar.maxValue = maxDrawTime;
+
+        if (resourceBar != null)
+            resourceBar.maxValue = maxDrawTime;
     }
 
     void Update()
     {
+        // ---------- HANDLE ACTIVE WALL ----------
         if (shapeActive)
         {
             shapeTimer -= Time.deltaTime;
 
+            // auto spike launch right before wall disappears
             if (spikedWallsUpgrade && spikeShotUpgrade && shapeTimer <= 0.15f)
                 ShootSpikesOutward();
 
-            if (spikedWallsUpgrade && spikeShotUpgrade && Keyboard.current.spaceKey.wasPressedThisFrame)
+            // manual shot (press Space again while wall is active)
+            if (spikedWallsUpgrade && spikeShotUpgrade &&
+                Keyboard.current.spaceKey.wasPressedThisFrame)
+            {
                 ShootSpikesOutward();
+            }
 
             if (shapeTimer <= 0f)
             {
                 ClearLine();
                 shapeActive = false;
             }
+
+            UpdateResourceUI();
             return;
         }
 
+        // ---------- INPUT FOR DRAWING ----------
         bool start = Keyboard.current.spaceKey.wasPressedThisFrame;
         bool hold = Keyboard.current.spaceKey.isPressed;
         bool end = Keyboard.current.spaceKey.wasReleasedThisFrame;
@@ -85,14 +98,26 @@ public class PlayerOutline : MonoBehaviour
             EndDraw();
         else if (!drawing)
             RegenerateResource();
+
         UpdateResourceUI();
     }
+
+    // ---------- PUBLIC UPGRADE HOOKS ----------
+
+    public void EnableDurationUpgrade() => durationUpgrade = true;
+    public void EnableSpikeWalls() => spikedWallsUpgrade = true;
+    public void EnableSpikeShot() => spikeShotUpgrade = true;
+    public void EnableStunWalls() => stunWallsUpgrade = true;
+
+    // ---------- RESOURCE UI ----------
 
     void UpdateResourceUI()
     {
         if (resourceBar != null)
             resourceBar.value = currentDrawTime;
     }
+
+    // ---------- DRAWING FLOW ----------
 
     void StartDraw()
     {
@@ -164,6 +189,8 @@ public class PlayerOutline : MonoBehaviour
     bool CanAttemptClose() => points.Count >= minVerticesToClose && pathLength >= minPerimeterToClose;
     bool IsClosedByDistance() => Vector2.Distance(points[0], points[^1]) <= closeThreshold;
 
+    // ---------- COVER CREATION ----------
+
     void CloseAndResolve()
     {
         drawing = false;
@@ -173,7 +200,9 @@ public class PlayerOutline : MonoBehaviour
 
         CreateCoverObject();
         shapeActive = true;
-        shapeTimer = coverLifetime;
+
+        float lifetime = durationUpgrade ? coverLifetime * 1.5f : coverLifetime;
+        shapeTimer = lifetime;
     }
 
     void EndDrawingAsCover()
@@ -181,7 +210,10 @@ public class PlayerOutline : MonoBehaviour
         drawing = false;
         CreateCoverObject();
         shapeActive = true;
-        shapeTimer = coverLifetime;
+
+        float lifetime = durationUpgrade ? coverLifetime * 1.5f : coverLifetime;
+        shapeTimer = lifetime;
+
         ClearLine();
     }
 
@@ -200,6 +232,7 @@ public class PlayerOutline : MonoBehaviour
         lrCopy.endColor = stunWallsUpgrade ? Color.blue : Color.white;
 
         storedCoverCollider = activeCover.AddComponent<EdgeCollider2D>();
+        storedCoverCollider.edgeRadius = 0.05f;
         storedCoverCollider.SetPoints(points);
 
         if (spikedWallsUpgrade)
@@ -209,8 +242,12 @@ public class PlayerOutline : MonoBehaviour
             sw.SpawnSpikesAlongEdge(points, storedCoverCollider);
         }
 
-        Destroy(activeCover, coverLifetime);
+        // Cover object itself will be destroyed later;
+        // spikes and stun behaviour are handled by their own scripts.
+        Destroy(activeCover, durationUpgrade ? coverLifetime * 1.5f : coverLifetime);
     }
+
+    // ---------- SPIKE FIRING ----------
 
     void ShootSpikesOutward()
     {
@@ -222,6 +259,8 @@ public class PlayerOutline : MonoBehaviour
 
         sw.ShootAllSpikes();
     }
+
+    // ---------- HELPERS ----------
 
     void ClearLine()
     {

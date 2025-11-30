@@ -40,7 +40,6 @@ public class PlayerShooting : MonoBehaviour
 
     void Update()
     {
-        // Reduce cooldowns over time
         if (cdR > 0) cdR -= Time.deltaTime;
         if (cdB > 0) cdB -= Time.deltaTime;
         if (cdG > 0) cdG -= Time.deltaTime;
@@ -57,7 +56,7 @@ public class PlayerShooting : MonoBehaviour
     void TryShoot(GameObject prefab, ref float cooldownTimer, float cooldownTime)
     {
         if (prefab == null) return;
-        if (cooldownTimer > 0) return; // still cooling down
+        if (cooldownTimer > 0) return;
 
         cooldownTimer = cooldownTime;
         Shoot(prefab);

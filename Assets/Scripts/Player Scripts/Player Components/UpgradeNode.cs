@@ -1,78 +1,221 @@
 ﻿using UnityEngine;
+using UnityEngine.UI;
+using TMPro;
+using UnityEngine.EventSystems;
 
-public class UpgradeNode : MonoBehaviour
+public class UpgradeNode : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
 {
-    [TextArea]
-    public string description;
+    [Header("Visual UI References")]
+    public Button button;
+    public Image icon;
+    public TMP_Text label;
+    public TMP_Text costLabel;
 
-    public enum UpgradeType
+    [Header("Upgrade Chain")]
+    [Tooltip("Leave null for the first node in a chain.")]
+    public UpgradeNode previousNode;
+    public int cost = 1;
+    public bool purchased = false;
+
+    [Header("Tooltip")]
+    public GameObject tooltipObject;
+    public TMP_Text tooltipText;
+    [TextArea]
+    public string upgradeDescription;
+
+    [Header("Trace / Wall Upgrades")]
+    public bool unlockDuration;
+    public bool unlockSpikeWalls;
+    public bool unlockSpikeShot;
+    public bool unlockStunWalls;
+
+    [Header("Projectile Upgrades")]
+    public bool projectileDamage;
+    public bool projectileSize;
+    public bool projectileScatter;
+    public bool projectileBounce;
+    public bool projectilePierce;
+    public bool projectileSpeed;
+
+    [Header("Speed Upgrades")]
+    public bool increaseSpeed;       // +10% movement speed
+    public bool unlockDash;
+    public bool unlockDoubleDash;
+
+    [Header("Audio")]
+    public AudioSource audioSource;
+    public AudioClip purchasedSFX;
+    public AudioClip cantAffordSFX;
+
+    private void Start()
     {
-        ProjectileSpeed,
-        ProjectileDamage,
-        ProjectileSize,
-        ProjectileBounce,
-        ProjectileScatter,
-        ProjectilePierce,
-        SpikedWalls,
-        StunWalls,
-        SpikeShot
+        if (button != null)
+            button.onClick.AddListener(OnClickUpgrade);
+
+        RefreshState();
     }
 
-    public UpgradeType type;
-
-    public void UnlockUpgrade()
+    private void OnEnable()
     {
-        PlayerShooting shooter = FindAnyObjectByType<PlayerShooting>();
-        PlayerOutline outline = FindAnyObjectByType<PlayerOutline>();
-        PlayerMovement movement = FindAnyObjectByType<PlayerMovement>();
+        RefreshState();
+    }
 
-        switch (type)
+    // =========================
+    // STATE / UI REFRESH
+    // =========================
+    public void RefreshState()
+    {
+        // cost label
+        if (costLabel != null)
+            costLabel.text = cost.ToString();
+
+        // already bought → green + disabled
+        if (purchased)
         {
-            case UpgradeType.ProjectileSpeed:
-                shooter.upgradeSpeed = true;
-                shooter.projectileSpeed += 3f;
-                Debug.Log("Unlocked: Projectile Speed");
-                break;
+            if (button != null) button.interactable = false;
 
-            case UpgradeType.ProjectileDamage:
-                shooter.upgradeDamage = true;
-                Debug.Log("Unlocked: Projectile Damage");
-                break;
-
-            case UpgradeType.ProjectileSize:
-                shooter.upgradeSize = true;
-                Debug.Log("Unlocked: Projectile Size");
-                break;
-
-            case UpgradeType.ProjectileBounce:
-                shooter.upgradeBounce = true;
-                Debug.Log("Unlocked: Projectile Bounce");
-                break;
-
-            case UpgradeType.ProjectileScatter:
-                shooter.upgradeScatter = true;
-                Debug.Log("Unlocked: Projectile Scatter");
-                break;
-
-            case UpgradeType.ProjectilePierce:
-                shooter.upgradePierce = true;
-                Debug.Log("Unlocked: Projectile Pierce");
-                break;
-
-            case UpgradeType.SpikedWalls:
-                outline.spikedWallsUpgrade = true;
-                Debug.Log("Unlocked: Spiked Walls");
-                break;
-
-            case UpgradeType.StunWalls:
-                outline.stunWallsUpgrade = true;
-                Debug.Log("Unlocked: Stun Walls");
-                break;
-
-            case UpgradeType.SpikeShot:
-                outline.spikeShotUpgrade = true;
-                Debug.Log("Unlocked: Spike Shot");
-                break;
+            if (icon != null) icon.color = Color.green;
+            if (label != null) label.color = Color.green;
+            return;
         }
+
+        // determine if this node should be unlocked by the chain
+        bool unlocked = (previousNode == null || previousNode.purchased);
+
+        if (button != null)
+            button.interactable = unlocked;
+
+        // dim visuals if locked
+        float alpha = unlocked ? 1f : 0.35f;
+
+        if (icon != null)
+            icon.color = new Color(1f, 1f, 1f, alpha);
+
+        if (label != null)
+            label.color = new Color(label.color.r, label.color.g, label.color.b, alpha);
+    }
+
+    // =========================
+    // CLICK HANDLER
+    // =========================
+    private void OnClickUpgrade()
+    {
+        if (purchased)
+            return;
+
+        // chain requirement
+        if (previousNode != null && !previousNode.purchased)
+        {
+            PlayCantAffordSound();   // also used as "locked" feedback
+            return;
+        }
+
+        // currency
+        if (PlayerCurrency.Instance == null)
+        {
+            Debug.LogWarning("PlayerCurrency.Instance is missing in scene.");
+            return;
+        }
+
+        if (!PlayerCurrency.Instance.Spend(cost))
+        {
+            PlayCantAffordSound();
+            return;
+        }
+
+        // mark purchased + apply effects
+        purchased = true;
+        ApplyUpgradeEffects();
+        PlayPurchaseSound();
+
+        // refresh THIS node immediately (turn green)
+        RefreshState();
+
+        // refresh only nodes that depend on this one
+        UpgradeNode[] allNodes = FindObjectsOfType<UpgradeNode>(true);
+        foreach (var n in allNodes)
+        {
+            if (n == null) continue;
+            if (n.previousNode == this)   // directly next in chain
+                n.RefreshState();
+        }
+    }
+
+    // =========================
+    // APPLY GAMEPLAY EFFECTS
+    // =========================
+    private void ApplyUpgradeEffects()
+    {
+        PlayerOutline trace = FindAnyObjectByType<PlayerOutline>();
+        PlayerShooting shoot = FindAnyObjectByType<PlayerShooting>();
+        PlayerMovement move = FindAnyObjectByType<PlayerMovement>();
+
+        // Trace / wall
+        if (trace != null)
+        {
+            if (unlockDuration) trace.durationUpgrade = true;
+            if (unlockSpikeWalls) trace.spikedWallsUpgrade = true;
+            if (unlockSpikeShot) trace.spikeShotUpgrade = true;
+            if (unlockStunWalls) trace.stunWallsUpgrade = true;
+        }
+
+        // Projectile
+        if (shoot != null)
+        {
+            if (projectileDamage) shoot.upgradeDamage = true;
+            if (projectileSize) shoot.upgradeSize = true;
+            if (projectileScatter) shoot.upgradeScatter = true;
+            if (projectileBounce) shoot.upgradeBounce = true;
+            if (projectilePierce) shoot.upgradePierce = true;
+            if (projectileSpeed) shoot.upgradeSpeed = true;
+        }
+
+        // Speed / dash
+        if (move != null)
+        {
+            if (increaseSpeed)
+                move.IncreaseSpeed(move.speed * 0.10f);   // +10%
+
+            if (unlockDash)
+                move.UnlockDash();
+
+            if (unlockDoubleDash)
+                move.UnlockDoubleDash();
+        }
+
+        Debug.Log("Purchased upgrade: " + name);
+    }
+
+    // =========================
+    // AUDIO HELPERS
+    // =========================
+    private void PlayPurchaseSound()
+    {
+        if (audioSource != null && purchasedSFX != null)
+            audioSource.PlayOneShot(purchasedSFX);
+    }
+
+    private void PlayCantAffordSound()
+    {
+        if (audioSource != null && cantAffordSFX != null)
+            audioSource.PlayOneShot(cantAffordSFX);
+    }
+
+    // =========================
+    // TOOLTIP HANDLERS
+    // =========================
+    public void OnPointerEnter(PointerEventData eventData)
+    {
+        if (tooltipObject != null && tooltipText != null)
+        {
+            tooltipObject.SetActive(true);
+            tooltipText.text = upgradeDescription;
+        }
+    }
+
+    public void OnPointerExit(PointerEventData eventData)
+    {
+        if (tooltipObject != null)
+            tooltipObject.SetActive(false);
     }
 }
