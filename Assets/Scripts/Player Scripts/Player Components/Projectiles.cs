@@ -4,54 +4,60 @@ public class Projectile : MonoBehaviour
 {
     public float speed = 12f;
     public int damage = 1;
+    public EnemyColor projectileColor = EnemyColor.None;
 
-    // restore these:
     public int bounce = 0;
     public int pierce = 0;
 
     public Vector2 direction;
-
     Rigidbody2D rb;
-    CircleCollider2D col;
-    LayerMask wallMask;
-    LayerMask playerMask;
+    float stuckTime = 0;
 
     void Awake()
     {
         rb = GetComponent<Rigidbody2D>();
-        col = GetComponent<CircleCollider2D>();
     }
 
     void Start()
     {
         rb.gravityScale = 0;
-        rb.linearVelocity = direction * speed;
+        rb.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
+        rb.linearVelocity = direction.normalized * speed;
+    }
 
-        wallMask = LayerMask.GetMask("Environment");
-        playerMask = LayerMask.GetMask("Player");
+    void FixedUpdate()
+    {
+        // If projectile slows down → restore motion
+        if (rb.linearVelocity.sqrMagnitude < 0.1f)
+            rb.linearVelocity = direction * speed;
 
-        Collider2D player = Physics2D.OverlapCircle(transform.position, 0.1f, playerMask);
-        if (player != null)
-            Physics2D.IgnoreCollision(col, player, true);
+        // If projectile is stuck in a wall → destroy
+        stuckTime += Time.fixedDeltaTime;
+        if (stuckTime > 0.4f)
+            Destroy(gameObject);
     }
 
     void Update()
     {
-        rb.linearVelocity = direction * speed;
+        rb.linearVelocity = direction.normalized * speed;
     }
 
     void OnCollisionEnter2D(Collision2D collision)
     {
-        GameObject hitObj = collision.gameObject;
-
-        if (hitObj.layer == LayerMask.NameToLayer("Player"))
+        if (collision.collider.CompareTag("Enemy"))
             return;
 
+        if (collision.collider.CompareTag("Player"))
+            return;
+
+        // Bounce logic
         if (bounce > 0)
         {
-            direction = Vector2.Reflect(direction, collision.contacts[0].normal).normalized;
+            Vector2 normal = collision.contacts[0].normal;
+            direction = Vector2.Reflect(direction, normal).normalized;
             rb.linearVelocity = direction * speed;
             bounce--;
+            stuckTime = 0; // reset stuck timer
             return;
         }
 
@@ -63,7 +69,7 @@ public class Projectile : MonoBehaviour
         EnemyHealth enemy = collision.GetComponentInParent<EnemyHealth>();
         if (enemy != null)
         {
-            enemy.TakeDamage(damage);
+            enemy.OnProjectileHit(projectileColor);
 
             if (pierce > 0)
             {

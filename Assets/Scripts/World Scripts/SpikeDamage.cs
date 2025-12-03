@@ -3,6 +3,8 @@ using System.Collections;
 
 public class SpikeDamage : MonoBehaviour
 {
+    public EnemyColor projectileColor;
+
     private bool isAttached = false;
     private bool damageActive = false;
     private Rigidbody2D rb;
@@ -58,7 +60,7 @@ public class SpikeDamage : MonoBehaviour
         var enemy = col2.collider.GetComponentInParent<EnemyHealth>();
         if (enemy != null)
         {
-            enemy.TakeDamage(1, spikeColor);
+            enemy.OnProjectileHit(projectileColor);
             Destroy(gameObject);
             return;
         }
