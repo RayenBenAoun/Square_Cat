@@ -6,7 +6,7 @@ AnimationClip:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: Plant_Seeder_Idle_Left
+  m_Name: Plant_Seeder_Idle_D
   serializedVersion: 6
   m_Legacy: 0
   m_Compressed: 0
@@ -20,13 +20,13 @@ AnimationClip:
   m_PPtrCurves:
   - curve:
     - time: 0
-      value: {fileID: 1868222866, guid: 2afeaa672e0baa649aa90306415ba6cc, type: 3}
+      value: {fileID: -1313825464, guid: 2afeaa672e0baa649aa90306415ba6cc, type: 3}
     - time: 0.083333336
-      value: {fileID: -639669987, guid: 2afeaa672e0baa649aa90306415ba6cc, type: 3}
+      value: {fileID: 790517471, guid: 2afeaa672e0baa649aa90306415ba6cc, type: 3}
     - time: 0.16666667
-      value: {fileID: 794577061, guid: 2afeaa672e0baa649aa90306415ba6cc, type: 3}
+      value: {fileID: 911202449, guid: 2afeaa672e0baa649aa90306415ba6cc, type: 3}
     - time: 0.25
-      value: {fileID: -699068778, guid: 2afeaa672e0baa649aa90306415ba6cc, type: 3}
+      value: {fileID: -952665536, guid: 2afeaa672e0baa649aa90306415ba6cc, type: 3}
     attribute: m_Sprite
     path: 
     classID: 212
@@ -46,10 +46,10 @@ AnimationClip:
       customType: 23
       isPPtrCurve: 1
     pptrCurveMapping:
-    - {fileID: 1868222866, guid: 2afeaa672e0baa649aa90306415ba6cc, type: 3}
-    - {fileID: -639669987, guid: 2afeaa672e0baa649aa90306415ba6cc, type: 3}
-    - {fileID: 794577061, guid: 2afeaa672e0baa649aa90306415ba6cc, type: 3}
-    - {fileID: -699068778, guid: 2afeaa672e0baa649aa90306415ba6cc, type: 3}
+    - {fileID: -1313825464, guid: 2afeaa672e0baa649aa90306415ba6cc, type: 3}
+    - {fileID: 790517471, guid: 2afeaa672e0baa649aa90306415ba6cc, type: 3}
+    - {fileID: 911202449, guid: 2afeaa672e0baa649aa90306415ba6cc, type: 3}
+    - {fileID: -952665536, guid: 2afeaa672e0baa649aa90306415ba6cc, type: 3}
   m_AnimationClipSettings:
     serializedVersion: 2
     m_AdditiveReferencePoseClip: {fileID: 0}

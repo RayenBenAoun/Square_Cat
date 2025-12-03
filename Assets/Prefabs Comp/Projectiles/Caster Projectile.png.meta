@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: f4001e12c186a0a40b6e1fca285eed4c
+guid: f79681938c2cefc42b61e08ab4415861
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: -5240573667666286360
-    second: ee63ad3f-28bc-4ab1-8c39-97af53d9dbca_0
+      213: -6119264993059211140
+    second: Caster Projectile_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -100,13 +100,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: ee63ad3f-28bc-4ab1-8c39-97af53d9dbca_0
+      name: Caster Projectile_0
       rect:
         serializedVersion: 2
-        x: 0
-        y: 0
-        width: 1024
-        height: 1024
+        x: 63
+        y: 88
+        width: 899
+        height: 795
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -115,8 +115,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 8e82c77d30eb547b0800000000000000
-      internalID: -5240573667666286360
+      spriteID: c78f83af8e0041ba0800000000000000
+      internalID: -6119264993059211140
       vertices: []
       indices: 
       edges: []
@@ -135,7 +135,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      ee63ad3f-28bc-4ab1-8c39-97af53d9dbca_0: -5240573667666286360
+      Caster Projectile_0: -6119264993059211140
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

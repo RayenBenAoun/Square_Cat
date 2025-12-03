@@ -3,50 +3,57 @@
 [RequireComponent(typeof(Rigidbody2D))]
 public class UniversalMonsterAI : MonoBehaviour
 {
-    [Header("Monster Settings")]
-    public string monsterName = "Bear";   // Set per prefab
+    [Header("Combat & Movement")]
     public int meleeDamage = 1;
     public float moveSpeed = 2f;
     public float aggroRange = 6f;
     public float attackRange = 1.5f;
-    public float attackCooldown = 1.5f;
+    public float attackCooldown = 1.2f;
+    public float attackDamageTime = 0.35f;
+    public float attackAnimTime = 0.6f;
 
+    [Header("Downed Retreat")]
+    public float retreatSpeedMultiplier = 0.5f;
+
+    [Header("Animator Parameters")]
+    public string paramHorizontal = "Horizontal";
+    public string paramVertical = "Vertical";
+    public string paramIsMoving = "IsMoving";
+    public string paramIsAttacking = "IsAttacking";
+
+    private Transform player;
+    private Rigidbody2D rb;
+    private Animator anim;
+    private EnemyHealth health;
+
+    private Vector2 lastDir = Vector2.down;
+    private bool isAttacking = false;
     private float lastAttackTime = 0;
-
-    [Header("References")]
-    Transform player;
-    Rigidbody2D rb;
-    Animator anim;
-    EnemyHealth health;
-
-    Vector2 lastDir = Vector2.down;
-
-    bool isAttacking = false;
-    float attackAnimTime = 0.6f;
 
     void Awake()
     {
-        player = GameObject.FindGameObjectWithTag("Player").transform;
-        if (player == null)
-        {
-            Debug.Log("❗ AI ERROR: player reference missing");
-            return;
-        }
+        GameObject p = GameObject.FindGameObjectWithTag("Player");
+        if (p != null)
+            player = p.transform;
+        else
+            Debug.LogWarning("UniversalMonsterAI: Player not found!");
+
         rb = GetComponent<Rigidbody2D>();
         anim = GetComponentInChildren<Animator>();
         health = GetComponentInChildren<EnemyHealth>();
 
-        rb.freezeRotation = true;
         rb.gravityScale = 0;
+        rb.freezeRotation = true;
     }
 
     void Update()
     {
-        if (player == null) return;
+        if (player == null || anim == null) return;
 
-        if (health.IsCurrentlyDowned())
+        if (health != null && health.IsCurrentlyDowned())
         {
-            RunAwayFromPlayer();
+            Retreat();
+            UpdateAnimator();
             return;
         }
 
@@ -55,10 +62,8 @@ public class UniversalMonsterAI : MonoBehaviour
         if (isAttacking)
         {
             rb.linearVelocity = Vector2.zero;
-            return;
         }
-
-        if (dist <= attackRange)
+        else if (dist <= attackRange)
         {
             rb.linearVelocity = Vector2.zero;
             TryAttack();
@@ -72,42 +77,35 @@ public class UniversalMonsterAI : MonoBehaviour
             rb.linearVelocity = Vector2.zero;
         }
 
-        UpdateAnimation();
-    }
-
-    void RunAwayFromPlayer()
-    {
-        Vector2 dir = (transform.position - player.position).normalized;
-        rb.linearVelocity = dir * (moveSpeed * 0.5f);
-        anim.Play(AnimDir("Move"));
-        lastDir = dir;
+        UpdateAnimator();
     }
 
     void MoveTowardPlayer()
     {
-        Vector2 moveDir = (player.position - transform.position).normalized;
-        lastDir = moveDir;
-        rb.linearVelocity = moveDir * moveSpeed;
+        Vector2 dir = (player.position - transform.position).normalized;
+        rb.linearVelocity = dir * moveSpeed;
+    }
+
+    void Retreat()
+    {
+        Vector2 dir = (transform.position - player.position).normalized;
+        rb.linearVelocity = dir * (moveSpeed * retreatSpeedMultiplier);
     }
 
     void TryAttack()
     {
-        if (Time.time >= lastAttackTime + attackCooldown)
-        {
-            lastAttackTime = Time.time;
-            isAttacking = true;
+        if (Time.time < lastAttackTime + attackCooldown)
+            return;
 
-            anim.Play(AnimDir("Attack"));
+        lastAttackTime = Time.time;
+        isAttacking = true;
 
-            Invoke(nameof(DelayedDamage), 0.35f);
-            Invoke(nameof(EndAttack), attackAnimTime);
-        }
+        Invoke(nameof(ApplyDamage), attackDamageTime);
+        Invoke(nameof(EndAttack), attackAnimTime);
     }
 
-    void DelayedDamage()
+    void ApplyDamage()
     {
-        if (health.IsCurrentlyDowned()) return;
-
         float dist = Vector2.Distance(transform.position, player.position);
         if (dist <= attackRange + 0.4f)
         {
@@ -122,21 +120,21 @@ public class UniversalMonsterAI : MonoBehaviour
         isAttacking = false;
     }
 
-    void UpdateAnimation()
+    void UpdateAnimator()
     {
-        if (isAttacking) return;
+        Vector2 vel = rb.linearVelocity;
 
-        if (rb.linearVelocity.sqrMagnitude > 0.1f)
-            anim.Play(AnimDir("Move"));
-        else
-            anim.Play(AnimDir("Idle"));
-    }
+        // Direction
+        if (vel.sqrMagnitude > 0.01f && !isAttacking)
+            lastDir = vel.normalized;
 
-    string AnimDir(string prefix)
-    {
-        if (Mathf.Abs(lastDir.x) > Mathf.Abs(lastDir.y))
-            return lastDir.x > 0 ? $"{monsterName}_{prefix}_R" : $"{monsterName}_{prefix}_L";
-        else
-            return lastDir.y > 0 ? $"{monsterName}_{prefix}_U" : $"{monsterName}_{prefix}_D";
+        anim.SetFloat(paramHorizontal, lastDir.x);
+        anim.SetFloat(paramVertical, lastDir.y);
+
+        // Test if moving
+        bool moving = vel.sqrMagnitude > 0.01f && !isAttacking;
+
+        anim.SetBool(paramIsMoving, moving);
+        anim.SetBool(paramIsAttacking, isAttacking);
     }
 }
