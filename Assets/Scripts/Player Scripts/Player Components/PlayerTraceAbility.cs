@@ -26,7 +26,7 @@ public class PlayerOutline : MonoBehaviour
     public Slider resourceBar;
 
     [Header("Cover & Combat")]
-    public float coverLifetime = 3f;   // base lifetime
+    public float coverLifetime = 3f;
     public int damageOnClose = 1;
     public GameObject spikePrefab;
 
@@ -62,16 +62,19 @@ public class PlayerOutline : MonoBehaviour
         {
             shapeTimer -= Time.deltaTime;
 
-            // auto spike launch right before wall disappears
+            // auto spike launch
             if (spikedWallsUpgrade && spikeShotUpgrade && shapeTimer <= 0.15f)
                 ShootSpikesOutward();
 
-            // manual shot (press Space again while wall is active)
+            // manual spike shot
             if (spikedWallsUpgrade && spikeShotUpgrade &&
                 Keyboard.current.spaceKey.wasPressedThisFrame)
             {
                 ShootSpikesOutward();
             }
+
+            // 🔥 WENDIGO TRACE-KILL CHECK 🔥
+            TryTraceKill();
 
             if (shapeTimer <= 0f)
             {
@@ -102,7 +105,30 @@ public class PlayerOutline : MonoBehaviour
         UpdateResourceUI();
     }
 
-    // ---------- PUBLIC UPGRADE HOOKS ----------
+    // ---------- TRACE KILL SYSTEM ----------
+
+    void TryTraceKill()
+    {
+        // only attempt kill when shape is active
+        if (!shapeActive) return;
+
+        // scan area — very cheap call
+        Collider2D[] hits = Physics2D.OverlapCircleAll(transform.position, 25f);
+
+        foreach (var h in hits)
+        {
+            WendigoAI w = h.GetComponent<WendigoAI>();
+            if (w != null)
+            {
+                if (w.isPhase2 && w.isDownedPhase2)
+                {
+                    w.KillFromTrace();
+                }
+            }
+        }
+    }
+
+    // ---------- UPGRADE HOOKS ----------
 
     public void EnableDurationUpgrade() => durationUpgrade = true;
     public void EnableSpikeWalls() => spikedWallsUpgrade = true;
@@ -242,12 +268,10 @@ public class PlayerOutline : MonoBehaviour
             sw.SpawnSpikesAlongEdge(points, storedCoverCollider);
         }
 
-        // Cover object itself will be destroyed later;
-        // spikes and stun behaviour are handled by their own scripts.
         Destroy(activeCover, durationUpgrade ? coverLifetime * 1.5f : coverLifetime);
     }
 
-    // ---------- SPIKE FIRING ----------
+    // ---------- SPIKES ----------
 
     void ShootSpikesOutward()
     {

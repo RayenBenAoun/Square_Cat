@@ -66,18 +66,24 @@ public class Projectile : MonoBehaviour
 
     void OnTriggerEnter2D(Collider2D collision)
     {
+        // DRAGON HIT
+        DragonAI dragon = collision.GetComponentInParent<DragonAI>();
+        if (dragon != null)
+        {
+            dragon.TakeProjectileHit(damage);
+            Destroy(gameObject);
+            return;
+        }
+
+        // NORMAL ENEMY HIT
         EnemyHealth enemy = collision.GetComponentInParent<EnemyHealth>();
         if (enemy != null)
         {
             enemy.OnProjectileHit(projectileColor);
-
-            if (pierce > 0)
-            {
-                pierce--;
-                return;
-            }
-
             Destroy(gameObject);
+            return;
         }
     }
+
+
 }
