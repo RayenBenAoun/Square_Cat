@@ -38,6 +38,7 @@ Transform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!212 &5386662342826053970
 SpriteRenderer:
+  serializedVersion: 2
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -83,6 +84,7 @@ SpriteRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 30
+  m_MaskInteraction: 0
   m_Sprite: {fileID: -1196655006, guid: 22638da172389754a976661a2211ea5e, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
@@ -92,7 +94,6 @@ SpriteRenderer:
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
-  m_MaskInteraction: 0
   m_SpriteSortPoint: 0
 --- !u!95 &425924915235435437
 Animator:
@@ -223,11 +224,11 @@ MonoBehaviour:
   - {fileID: 4777381419774482734, guid: e50983f6f88aa004c85cb46d8588e818, type: 3}
   flySpeed: 2.5
   fireRateP1: 1.2
-  phase1HP: 1
+  phase1HP: 12
   barrageRate: 0.22
   barrageDuration: 8
   vulnerabilityWindow: 2.2
-  phase2HP: 1
+  phase2HP: 12
   minionsToSpawn: 4
   minionSpawnOffset: 2
   meleeSpeed: 3

@@ -52,15 +52,21 @@ public class ArenaWaveManager : MonoBehaviour
     }
 
     public void EnemyDied()
-    {
-        AliveEnemies--;
+{
+    AliveEnemies--;
 
-        if (AliveEnemies <= 0)
-        {
-            AliveEnemies = 0;
-            OnWaveEnded?.Invoke();
-        }
+    if (AliveEnemies <= 0)
+    {
+        AliveEnemies = 0;
+
+        PlayerHealth p = FindFirstObjectByType<PlayerHealth>();
+        if (p != null)
+            p.Heal(9999); // Heal to full every time
+
+        OnWaveEnded?.Invoke();
     }
+}
+
 
     // ======================================================
     // RESET THE CURRENT WAVE WITHOUT CHANGING WAVE NUMBER
