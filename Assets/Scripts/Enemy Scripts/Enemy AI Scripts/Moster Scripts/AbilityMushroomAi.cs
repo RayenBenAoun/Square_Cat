@@ -3,60 +3,49 @@
 [RequireComponent(typeof(Rigidbody2D))]
 public class AbilityMushroomAI : MonoBehaviour
 {
-    [Header("Animation Tag")]
-    public string animPrefix = "Plant_Seeder";
-    // Set per enemy:
-    // Mushroom_Party
-    // Plant_Seeder
+    [Header("Animation Prefix (IMPORTANT)")]
+    public string animPrefix = "Mushroom_Party";
+    // or "Plant_Seeder"
 
-    [Header("Role Type")]
-    public bool movesTowardPlayer = false;
-    // Plant Seeder = FALSE
-    // Mushroom Party = TRUE or FALSE depending on desired behavior
-
-    [Header("Common Stats")]
+    [Header("Movement")]
+    public bool movesTowardPlayer = true;
     public float moveSpeed = 1.4f;
     public float aggroRange = 5f;
-    public float attackRange = 1.4f;
-    public float attackCooldown = 1.5f;
-    public float attackWindup = 0.35f;
-    public float attackAnimTime = 0.7f;
+
+    [Header("Melee Attack")]
+    public bool hasMeleeAttack = false;
+    public float attackRange = 1.25f;
+    public float attackCooldown = 1.4f;
     public int meleeDamage = 1;
+    public float attackWindup = 0.25f;
+    public float attackAnimTime = 0.6f;
 
-    [Header("Ability Settings")]
+    [Header("AOE Ability")]
     public bool hasAbility = true;
-    public float abilityCooldown = 7f;
-    public float abilityWindup = 0.5f;
-    public float abilityAnimTime = 1.2f;
-
-    // Plant Seeder: projectile or minions
-    public GameObject abilityProjectilePrefab;
-    public GameObject abilitySpawnPrefab;
-    public int spawnCount = 0; // if > 0, it will spawn
-
-    // Mushroom Party: Might do AoE  
-    public float AoERadius = 2f;
-    public int AoEDamage = 1;
+    public float abilityCooldown = 6f;
+    public float abilityRadius = 2.8f;
+    public int abilityDamage = 2;
+    public float abilityWindup = 0.8f;
+    public float abilityAnimTime = 1.4f;
 
     Transform player;
     Rigidbody2D rb;
     Animator anim;
-    EnemyHealth health;
-
-    Vector2 lastDir = Vector2.down;
-    bool isAttacking = false;
-    bool isAbility = false;
 
     float lastAttackTime = 0f;
     float lastAbilityTime = 0f;
+    bool isAttacking = false;
+    bool isAbility = false;
+
+    Vector2 lastDir = Vector2.down;
+    EnemyHealth health;
 
     void Awake()
     {
         player = GameObject.FindGameObjectWithTag("Player").transform;
-        anim = GetComponentInChildren<Animator>();
         rb = GetComponent<Rigidbody2D>();
+        anim = GetComponentInChildren<Animator>();
         health = GetComponentInChildren<EnemyHealth>();
-
         rb.gravityScale = 0;
         rb.freezeRotation = true;
     }
@@ -64,8 +53,6 @@ public class AbilityMushroomAI : MonoBehaviour
     void Update()
     {
         if (player == null) return;
-
-        float dist = Vector2.Distance(transform.position, player.position);
 
         if (health != null && health.IsCurrentlyDowned())
         {
@@ -79,25 +66,26 @@ public class AbilityMushroomAI : MonoBehaviour
             return;
         }
 
+        float dist = Vector2.Distance(transform.position, player.position);
+
+        // Try ability FIRST
         if (hasAbility && Time.time >= lastAbilityTime + abilityCooldown)
         {
-            StartAbility();
+            TriggerAbility();
             return;
         }
 
-        if (dist <= attackRange)
+        // Try normal melee attack
+        if (hasMeleeAttack && dist <= attackRange)
         {
-            TryAttack();
-            rb.linearVelocity = Vector2.zero;
+            TriggerMelee();
+            return;
         }
-        else if (movesTowardPlayer && dist <= aggroRange)
-        {
+
+        if (movesTowardPlayer && dist <= aggroRange)
             MoveTowardPlayer();
-        }
         else
-        {
             rb.linearVelocity = Vector2.zero;
-        }
 
         UpdateAnim();
     }
@@ -109,7 +97,10 @@ public class AbilityMushroomAI : MonoBehaviour
         rb.linearVelocity = dir * moveSpeed;
     }
 
-    void TryAttack()
+    // =======================
+    // MELEE ATTACK
+    // =======================
+    void TriggerMelee()
     {
         if (Time.time < lastAttackTime + attackCooldown)
             return;
@@ -118,68 +109,53 @@ public class AbilityMushroomAI : MonoBehaviour
         isAttacking = true;
 
         anim.Play(Anim("Attack"));
-
-        Invoke(nameof(DealMeleeDamage), attackWindup);
-        Invoke(nameof(StopAttack), attackAnimTime);
+        Invoke(nameof(DoMeleeDamage), attackWindup);
+        Invoke(nameof(FinishMelee), attackAnimTime);
     }
 
-    void DealMeleeDamage()
+    void DoMeleeDamage()
     {
-        if (Vector2.Distance(transform.position, player.position) <= attackRange + 0.4f)
+        if (Vector2.Distance(transform.position, player.position) <= attackRange + 0.3f)
             player.GetComponent<PlayerHealth>()?.TakeDamage(meleeDamage);
     }
 
-    void StopAttack()
+    void FinishMelee()
     {
         isAttacking = false;
     }
 
-    void StartAbility()
+    // =======================
+    // ABILITY — AOE
+    // =======================
+    void TriggerAbility()
     {
         lastAbilityTime = Time.time;
         isAbility = true;
 
         anim.Play(Anim("Ability"));
-        Invoke(nameof(DoAbility), abilityWindup);
-        Invoke(nameof(StopAbility), abilityAnimTime);
+        Invoke(nameof(DoAOE), abilityWindup);
+        Invoke(nameof(FinishAbility), abilityAnimTime);
     }
 
-    void DoAbility()
+    void DoAOE()
     {
-        // ░░ PLANT SEEDER BEHAVIOR ░░
-        if (abilityProjectilePrefab != null)
+        // Damage all players in radius
+        Collider2D[] hits = Physics2D.OverlapCircleAll(transform.position, abilityRadius);
+        foreach (var hit in hits)
         {
-            Vector2 dir = (player.position - transform.position).normalized;
-            GameObject proj = Instantiate(abilityProjectilePrefab, transform.position, Quaternion.identity);
-            proj.transform.right = dir;
-            proj.GetComponent<Rigidbody2D>().linearVelocity = dir * 7f;
-            return;
-        }
-
-        if (spawnCount > 0 && abilitySpawnPrefab != null)
-        {
-            for (int i = 0; i < spawnCount; i++)
-            {
-                Vector2 offset = Random.insideUnitCircle * 1.4f;
-                Instantiate(abilitySpawnPrefab, transform.position + (Vector3)offset, Quaternion.identity);
-            }
-            return;
-        }
-
-        // ░░ MUSHROOM PARTY AoE ░░
-        Collider2D[] hit = Physics2D.OverlapCircleAll(transform.position, AoERadius);
-        foreach (var h in hit)
-        {
-            if (h.CompareTag("Player"))
-                h.GetComponent<PlayerHealth>()?.TakeDamage(AoEDamage);
+            if (hit.CompareTag("Player"))
+                hit.GetComponent<PlayerHealth>()?.TakeDamage(abilityDamage);
         }
     }
 
-    void StopAbility()
+    void FinishAbility()
     {
         isAbility = false;
     }
 
+    // =======================
+    // ANIMATION HANDLING
+    // =======================
     void UpdateAnim()
     {
         if (isAttacking || isAbility) return;
@@ -200,10 +176,7 @@ public class AbilityMushroomAI : MonoBehaviour
 
     void OnDrawGizmosSelected()
     {
-        Gizmos.color = Color.yellow;
-        Gizmos.DrawWireSphere(transform.position, attackRange);
-
-        Gizmos.color = Color.red;
-        Gizmos.DrawWireSphere(transform.position, AoERadius);
+        Gizmos.color = Color.green;
+        Gizmos.DrawWireSphere(transform.position, abilityRadius);
     }
 }
