@@ -11,15 +11,16 @@ GameObject:
   - component: {fileID: 5333462036224155178}
   - component: {fileID: 5386662342826053970}
   - component: {fileID: 425924915235435437}
-  - component: {fileID: 6814029469425622648}
   - component: {fileID: -944191870340543014}
+  - component: {fileID: 4395271033373965302}
+  - component: {fileID: 4758725600200583882}
   m_Layer: 0
   m_Name: Dragon
-  m_TagString: Untagged
+  m_TagString: Dragon
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &5333462036224155178
 Transform:
   m_ObjectHideFlags: 0
@@ -29,8 +30,8 @@ Transform:
   m_GameObject: {fileID: 5326052311336613042}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -2.7489998, y: -1.51, z: 0}
-  m_LocalScale: {x: 3, y: 3, z: 3}
+  m_LocalPosition: {x: -5.15605, y: 8.28537, z: 0}
+  m_LocalScale: {x: 5, y: 4, z: 2}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
@@ -81,7 +82,7 @@ SpriteRenderer:
   m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 0
   m_SortingLayer: 0
-  m_SortingOrder: 0
+  m_SortingOrder: 30
   m_Sprite: {fileID: -1196655006, guid: 22638da172389754a976661a2211ea5e, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
@@ -115,33 +116,6 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
---- !u!50 &6814029469425622648
-Rigidbody2D:
-  serializedVersion: 5
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5326052311336613042}
-  m_BodyType: 0
-  m_Simulated: 1
-  m_UseFullKinematicContacts: 0
-  m_UseAutoMass: 0
-  m_Mass: 1
-  m_LinearDamping: 0
-  m_AngularDamping: 0.05
-  m_GravityScale: 1
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_Interpolate: 0
-  m_SleepingMode: 1
-  m_CollisionDetection: 0
-  m_Constraints: 0
 --- !u!60 &-944191870340543014
 PolygonCollider2D:
   m_ObjectHideFlags: 0
@@ -199,3 +173,60 @@ PolygonCollider2D:
       - {x: 0.13, y: -0.089999996}
       - {x: 0.13, y: 0.35999998}
   m_UseDelaunayMesh: 0
+--- !u!50 &4395271033373965302
+Rigidbody2D:
+  serializedVersion: 5
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5326052311336613042}
+  m_BodyType: 1
+  m_Simulated: 1
+  m_UseFullKinematicContacts: 0
+  m_UseAutoMass: 0
+  m_Mass: 1
+  m_LinearDamping: 0
+  m_AngularDamping: 0.05
+  m_GravityScale: 0
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_Interpolate: 0
+  m_SleepingMode: 1
+  m_CollisionDetection: 0
+  m_Constraints: 4
+--- !u!114 &4758725600200583882
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5326052311336613042}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b1482d834479fae4590125b86a15710e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DragonAI
+  perchPoint: {fileID: 0}
+  player: {fileID: 0}
+  fireballPrefab: {fileID: 6337706441770711264, guid: b31e8485a83679b479e5a9ea842e42f1, type: 3}
+  teleportArea: {fileID: 0}
+  possibleMinions: []
+  flySpeed: 2.5
+  fireRateP1: 1.2
+  phase1HP: 1
+  barrageRate: 0.22
+  barrageDuration: 8
+  vulnerabilityWindow: 2.2
+  phase2HP: 1
+  minionsToSpawn: 4
+  minionSpawnOffset: 2
+  meleeSpeed: 3
+  meleeRange: 1.4
+  downedDuration: 4
+  finalHitsRequired: 15
