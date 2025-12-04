@@ -12,9 +12,9 @@ GameObject:
   - component: {fileID: 3328936907858035323}
   - component: {fileID: 4041741537891264050}
   - component: {fileID: 1662992885472929697}
-  - component: {fileID: 2848070059721093951}
   - component: {fileID: 1991259747143482442}
   - component: {fileID: 581672454237195829}
+  - component: {fileID: -3481623150089641586}
   m_Layer: 0
   m_Name: Troll
   m_TagString: Untagged
@@ -143,31 +143,7 @@ Rigidbody2D:
   m_Interpolate: 0
   m_SleepingMode: 1
   m_CollisionDetection: 0
-  m_Constraints: 0
---- !u!114 &2848070059721093951
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4777381419774482734}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 652feaed8a46b6e4d85233fcb59c98a8, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::UniversalMonsterAI
-  meleeDamage: 1
-  moveSpeed: 2
-  aggroRange: 6
-  attackRange: 1.5
-  attackCooldown: 1.5
-  attackDamageTime: 0.35
-  attackAnimTime: 0.6
-  retreatSpeedMultiplier: 0.5
-  paramHorizontal: Horizontal
-  paramVertical: Vertical
-  paramIsMoving: IsMoving
-  paramIsAttacking: IsAttacking
+  m_Constraints: 4
 --- !u!60 &1991259747143482442
 PolygonCollider2D:
   m_ObjectHideFlags: 0
@@ -237,9 +213,28 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 252303ce72c88fa4ca8e5ac360f59c5f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyHealth
-  MaxHealth: 3
-  Health: 3
-  enemyColor: 0
+  MaxHealth: 6
+  Health: 6
+  enemyColor: 3
   downed: 0
+  rewardAmount: 1
   flashInterval: 0.2
   downedDuration: 3
+--- !u!114 &-3481623150089641586
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4777381419774482734}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f6789328a7b0f04459f52040707a5f69, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BasicEnemyAI
+  EnemyName: Troll
+  moveSpeed: 1
+  aggroRange: 6
+  attackRange: 2.5
+  attackCooldown: 2
+  damage: 1

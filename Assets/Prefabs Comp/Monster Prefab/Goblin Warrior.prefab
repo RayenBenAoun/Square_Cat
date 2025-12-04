@@ -15,6 +15,7 @@ GameObject:
   - component: {fileID: 6905498832940144344}
   - component: {fileID: 2504820098885890555}
   - component: {fileID: 3021485958516689355}
+  - component: {fileID: 3770645813051935276}
   m_Layer: 0
   m_Name: Goblin Warrior
   m_TagString: Untagged
@@ -241,3 +242,21 @@ MonoBehaviour:
   downed: 0
   flashInterval: 0.2
   downedDuration: 3
+--- !u!114 &3770645813051935276
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6960005900565651852}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f6789328a7b0f04459f52040707a5f69, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BasicEnemyAI
+  EnemyName: Goblin_Warrior
+  moveSpeed: 2
+  aggroRange: 6
+  attackRange: 1.2
+  attackCooldown: 1.3
+  damage: 1

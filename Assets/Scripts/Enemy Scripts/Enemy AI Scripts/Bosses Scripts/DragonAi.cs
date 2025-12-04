@@ -4,10 +4,10 @@ using System.Collections.Generic;
 
 public class DragonAI : MonoBehaviour
 {
-    [Header("References")]
+    [Header("References (Assigned At Runtime)")]
     public Transform perchPoint;
     public Transform player;
-    public GameObject fireballPrefab;
+    public GameObject fireballPrefab;     // Prefab (assigned in Inspector)
     public Collider2D teleportArea;
 
     [Header("Minions To Spawn (For Phase 3)")]
@@ -42,12 +42,40 @@ public class DragonAI : MonoBehaviour
     int finalHits;
     bool canBeHit = false;
 
+    // --------------------------------------------------------
+    // NEW: Allows spawner to assign scene references safely
+    // --------------------------------------------------------
+    public void Initialize(Transform perch, Transform playerTarget, Collider2D teleport)
+    {
+        perchPoint = perch;
+        player = playerTarget;
+        teleportArea = teleport;
+    }
+
     void Start()
     {
         rb = GetComponent<Rigidbody2D>();
         anim = GetComponent<Animator>();
-
         rb.gravityScale = 0;
+
+        // --------------------------------------------------------
+        // NEW: Auto-find references if not assigned by spawner
+        // --------------------------------------------------------
+        if (player == null)
+            player = GameObject.FindGameObjectWithTag("Player").transform;
+
+        if (perchPoint == null)
+        {
+            var perchObj = GameObject.Find("DragonPerch");
+            if (perchObj != null) perchPoint = perchObj.transform;
+        }
+
+        if (teleportArea == null)
+        {
+            var teleObj = GameObject.Find("Dragon Teleport Area");
+            if (teleObj != null) teleportArea = teleObj.GetComponent<Collider2D>();
+        }
+        // --------------------------------------------------------
 
         // Start offscreen
         transform.position = new Vector2(-12f, 1f);
@@ -111,7 +139,6 @@ public class DragonAI : MonoBehaviour
     {
         GameObject f = Instantiate(fireballPrefab, transform.position, Quaternion.identity);
 
-        // Ignore the perch wall
         Collider2D myCol = GetComponent<Collider2D>();
         Collider2D fCol = f.GetComponent<Collider2D>();
         if (myCol != null && fCol != null)
@@ -180,7 +207,6 @@ public class DragonAI : MonoBehaviour
             yield return new WaitForSeconds(barrageRate);
         }
 
-        // Drop down to be hittable
         anim.SetTrigger("Landing");
         yield return new WaitForSeconds(0.7f);
 
@@ -218,7 +244,10 @@ public class DragonAI : MonoBehaviour
     {
         for (int i = 0; i < minionsToSpawn; i++)
         {
-            Vector2 pos = (Vector2)transform.position + Vector2.down * minionSpawnOffset + new Vector2(Random.Range(-1f, 1f), 0);
+            Vector2 pos = (Vector2)transform.position +
+                          Vector2.down * minionSpawnOffset +
+                          new Vector2(Random.Range(-1f, 1f), -7f);
+
             Instantiate(possibleMinions[Random.Range(0, possibleMinions.Length)], pos, Quaternion.identity);
         }
     }
@@ -251,7 +280,7 @@ public class DragonAI : MonoBehaviour
     }
 
     // --------------------------------------------------------
-    // TAKE DAMAGE DURING FINAL PHASE
+    // FINAL PHASE HITS
     // --------------------------------------------------------
     public void FinalPhaseHit()
     {

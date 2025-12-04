@@ -20,7 +20,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &5333462036224155178
 Transform:
   m_ObjectHideFlags: 0
@@ -29,7 +29,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 5326052311336613042}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: -5.15605, y: 8.28537, z: 0}
   m_LocalScale: {x: 5, y: 4, z: 2}
   m_ConstrainProportionsScale: 0
@@ -216,7 +216,11 @@ MonoBehaviour:
   player: {fileID: 0}
   fireballPrefab: {fileID: 6337706441770711264, guid: b31e8485a83679b479e5a9ea842e42f1, type: 3}
   teleportArea: {fileID: 0}
-  possibleMinions: []
+  possibleMinions:
+  - {fileID: 3220092707487531449, guid: ac8443c55a87bbc478e2d9500a85f701, type: 3}
+  - {fileID: 2463332594708632585, guid: 1983f8c62adc8934aaff5681c48e3655, type: 3}
+  - {fileID: 3294232373721675232, guid: f9e1bc8907a79664f904b25098db03f9, type: 3}
+  - {fileID: 4777381419774482734, guid: e50983f6f88aa004c85cb46d8588e818, type: 3}
   flySpeed: 2.5
   fireRateP1: 1.2
   phase1HP: 1

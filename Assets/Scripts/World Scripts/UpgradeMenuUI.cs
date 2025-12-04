@@ -1,13 +1,16 @@
-using UnityEngine;
+﻿using UnityEngine;
 
 public class UpgradeMenuUI : MonoBehaviour
 {
     [Header("Panels")]
-    public GameObject InitialPrompt;        // "Press X to interact"
-    public GameObject MainPanel;            // first menu with 4 big buttons
-    public GameObject ProjectileTreePanel;  // panel that holds projectile nodes
-    public GameObject DrawTreePanel;        // panel that holds draw nodes
-    public GameObject SpeedTreePanel;       // panel that holds speed nodes
+    public GameObject InitialPrompt;
+    public GameObject MainPanel;
+    public GameObject ProjectileTreePanel;
+    public GameObject DrawTreePanel;
+    public GameObject SpeedTreePanel;
+
+    // ⭐ NEW HEART TREE PANEL
+    public GameObject HeartsTreePanel;
 
     [Header("Player References")]
     public PlayerMovement playerMovement;
@@ -22,6 +25,9 @@ public class UpgradeMenuUI : MonoBehaviour
         if (ProjectileTreePanel) ProjectileTreePanel.SetActive(false);
         if (DrawTreePanel) DrawTreePanel.SetActive(false);
         if (SpeedTreePanel) SpeedTreePanel.SetActive(false);
+
+        // ⭐ NEW
+        if (HeartsTreePanel) HeartsTreePanel.SetActive(false);
     }
 
     // Called by BlackSmithInteract when you press X
@@ -34,28 +40,26 @@ public class UpgradeMenuUI : MonoBehaviour
         if (DrawTreePanel) DrawTreePanel.SetActive(false);
         if (SpeedTreePanel) SpeedTreePanel.SetActive(false);
 
+        // ⭐ Hide Hearts panel when opening main menu
+        if (HeartsTreePanel) HeartsTreePanel.SetActive(false);
+
         // Lock gameplay while in menu
         if (playerMovement) playerMovement.enabled = false;
         if (playerShooting) playerShooting.enabled = false;
         if (playerOutline) playerOutline.enabled = false;
     }
 
-    // === PANEL SWITCHES (these are what the buttons should call) ===
+    // === PANEL SWITCHES ===
 
-  
     public void ShowProjectileTree()
     {
-        Debug.Log("=== BUTTON CLICKED ===");
+        if (MainPanel) MainPanel.SetActive(false);
+        if (ProjectileTreePanel) ProjectileTreePanel.SetActive(true);
+        if (DrawTreePanel) DrawTreePanel.SetActive(false);
+        if (SpeedTreePanel) SpeedTreePanel.SetActive(false);
 
-        MainPanel.SetActive(false);
-
-        Debug.Log("Activating Projectile panel...");
-        ProjectileTreePanel.SetActive(true);
-
-        Debug.Log("ProjectileTreePanel active AFTER = " + ProjectileTreePanel.activeSelf);
-
-        DrawTreePanel.SetActive(false);
-        SpeedTreePanel.SetActive(false);
+        // ⭐ NEW
+        if (HeartsTreePanel) HeartsTreePanel.SetActive(false);
     }
 
     public void ShowDrawTree()
@@ -64,6 +68,9 @@ public class UpgradeMenuUI : MonoBehaviour
         if (ProjectileTreePanel) ProjectileTreePanel.SetActive(false);
         if (DrawTreePanel) DrawTreePanel.SetActive(true);
         if (SpeedTreePanel) SpeedTreePanel.SetActive(false);
+
+        // ⭐ NEW
+        if (HeartsTreePanel) HeartsTreePanel.SetActive(false);
     }
 
     public void ShowSpeedTree()
@@ -72,6 +79,20 @@ public class UpgradeMenuUI : MonoBehaviour
         if (ProjectileTreePanel) ProjectileTreePanel.SetActive(false);
         if (DrawTreePanel) DrawTreePanel.SetActive(false);
         if (SpeedTreePanel) SpeedTreePanel.SetActive(true);
+
+        // ⭐ NEW
+        if (HeartsTreePanel) HeartsTreePanel.SetActive(false);
+    }
+
+    // ⭐ NEW HEART TREE BUTTON
+    public void ShowHeartsTree()
+    {
+        if (MainPanel) MainPanel.SetActive(false);
+        if (ProjectileTreePanel) ProjectileTreePanel.SetActive(false);
+        if (DrawTreePanel) DrawTreePanel.SetActive(false);
+        if (SpeedTreePanel) SpeedTreePanel.SetActive(false);
+
+        if (HeartsTreePanel) HeartsTreePanel.SetActive(true);
     }
 
     // Back button on each tree panel
@@ -81,6 +102,9 @@ public class UpgradeMenuUI : MonoBehaviour
         if (ProjectileTreePanel) ProjectileTreePanel.SetActive(false);
         if (DrawTreePanel) DrawTreePanel.SetActive(false);
         if (SpeedTreePanel) SpeedTreePanel.SetActive(false);
+
+        // ⭐ NEW
+        if (HeartsTreePanel) HeartsTreePanel.SetActive(false);
     }
 
     // Exit button on main menu
@@ -91,6 +115,9 @@ public class UpgradeMenuUI : MonoBehaviour
         if (ProjectileTreePanel) ProjectileTreePanel.SetActive(false);
         if (DrawTreePanel) DrawTreePanel.SetActive(false);
         if (SpeedTreePanel) SpeedTreePanel.SetActive(false);
+
+        // ⭐ NEW
+        if (HeartsTreePanel) HeartsTreePanel.SetActive(false);
 
         // Re-enable gameplay
         if (playerMovement) playerMovement.enabled = true;

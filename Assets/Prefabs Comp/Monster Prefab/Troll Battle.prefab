@@ -12,9 +12,9 @@ GameObject:
   - component: {fileID: 7541209073189910778}
   - component: {fileID: 9155577590365217891}
   - component: {fileID: 9153696105838906904}
-  - component: {fileID: 5761537793593639569}
   - component: {fileID: 6316071427324670685}
   - component: {fileID: 3385728527796547308}
+  - component: {fileID: -3790883528768229712}
   m_Layer: 0
   m_Name: Troll Battle
   m_TagString: Untagged
@@ -132,7 +132,7 @@ Rigidbody2D:
   m_Mass: 1
   m_LinearDamping: 0
   m_AngularDamping: 0.05
-  m_GravityScale: 1
+  m_GravityScale: 0
   m_Material: {fileID: 0}
   m_IncludeLayers:
     serializedVersion: 2
@@ -143,31 +143,7 @@ Rigidbody2D:
   m_Interpolate: 0
   m_SleepingMode: 1
   m_CollisionDetection: 0
-  m_Constraints: 0
---- !u!114 &5761537793593639569
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5068456394638042296}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 652feaed8a46b6e4d85233fcb59c98a8, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::UniversalMonsterAI
-  meleeDamage: 1
-  moveSpeed: 2
-  aggroRange: 6
-  attackRange: 1.5
-  attackCooldown: 1.5
-  attackDamageTime: 0.35
-  attackAnimTime: 0.6
-  retreatSpeedMultiplier: 0.5
-  paramHorizontal: Horizontal
-  paramVertical: Vertical
-  paramIsMoving: IsMoving
-  paramIsAttacking: IsAttacking
+  m_Constraints: 4
 --- !u!60 &6316071427324670685
 PolygonCollider2D:
   m_ObjectHideFlags: 0
@@ -236,9 +212,28 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 252303ce72c88fa4ca8e5ac360f59c5f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyHealth
-  MaxHealth: 3
+  MaxHealth: 6
   Health: 3
   enemyColor: 0
   downed: 0
+  rewardAmount: 1
   flashInterval: 0.2
   downedDuration: 3
+--- !u!114 &-3790883528768229712
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5068456394638042296}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f6789328a7b0f04459f52040707a5f69, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BasicEnemyAI
+  EnemyName: Troll_Battle
+  moveSpeed: 2
+  aggroRange: 6
+  attackRange: 2.5
+  attackCooldown: 3
+  damage: 1

@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 
 public class UpgradeSystem : MonoBehaviour
@@ -16,6 +16,9 @@ public class UpgradeSystem : MonoBehaviour
         unlockedLevels["Projectile"] = 0;
         unlockedLevels["Draw"] = 0;
         unlockedLevels["Speed"] = 0;
+
+        // ⭐ NEW HEART TREE
+        unlockedLevels["Hearts"] = 0;
     }
 
     public bool CanUnlockNode(string group, int nodeIndex)

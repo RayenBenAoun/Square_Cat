@@ -42,6 +42,13 @@ public class UpgradeNode : MonoBehaviour, IPointerEnterHandler, IPointerExitHand
     public bool unlockDash;
     public bool unlockDoubleDash;
 
+    // ⭐⭐⭐ NEW HEART / REVIVE SYSTEM ⭐⭐⭐
+    [Header("Heart Upgrades")]
+    public bool heartUpgrade;        // adds +1 max health
+
+    [Header("Revive Upgrade")]
+    public bool reviveUpgrade;       // allows mid-fight revive (costs 10 currency)
+
     [Header("Audio")]
     public AudioSource audioSource;
     public AudioClip purchasedSFX;
@@ -65,11 +72,9 @@ public class UpgradeNode : MonoBehaviour, IPointerEnterHandler, IPointerExitHand
     // =========================
     public void RefreshState()
     {
-        // cost label
         if (costLabel != null)
             costLabel.text = cost.ToString();
 
-        // already bought → green + disabled
         if (purchased)
         {
             if (button != null) button.interactable = false;
@@ -79,13 +84,11 @@ public class UpgradeNode : MonoBehaviour, IPointerEnterHandler, IPointerExitHand
             return;
         }
 
-        // determine if this node should be unlocked by the chain
         bool unlocked = (previousNode == null || previousNode.purchased);
 
         if (button != null)
             button.interactable = unlocked;
 
-        // dim visuals if locked
         float alpha = unlocked ? 1f : 0.35f;
 
         if (icon != null)
@@ -103,14 +106,12 @@ public class UpgradeNode : MonoBehaviour, IPointerEnterHandler, IPointerExitHand
         if (purchased)
             return;
 
-        // chain requirement
         if (previousNode != null && !previousNode.purchased)
         {
-            PlayCantAffordSound();   // also used as "locked" feedback
+            PlayCantAffordSound();
             return;
         }
 
-        // currency
         if (PlayerCurrency.Instance == null)
         {
             Debug.LogWarning("PlayerCurrency.Instance is missing in scene.");
@@ -123,20 +124,17 @@ public class UpgradeNode : MonoBehaviour, IPointerEnterHandler, IPointerExitHand
             return;
         }
 
-        // mark purchased + apply effects
         purchased = true;
         ApplyUpgradeEffects();
         PlayPurchaseSound();
 
-        // refresh THIS node immediately (turn green)
         RefreshState();
 
-        // refresh only nodes that depend on this one
         UpgradeNode[] allNodes = FindObjectsOfType<UpgradeNode>(true);
         foreach (var n in allNodes)
         {
             if (n == null) continue;
-            if (n.previousNode == this)   // directly next in chain
+            if (n.previousNode == this)
                 n.RefreshState();
         }
     }
@@ -149,6 +147,7 @@ public class UpgradeNode : MonoBehaviour, IPointerEnterHandler, IPointerExitHand
         PlayerOutline trace = FindAnyObjectByType<PlayerOutline>();
         PlayerShooting shoot = FindAnyObjectByType<PlayerShooting>();
         PlayerMovement move = FindAnyObjectByType<PlayerMovement>();
+        PlayerHealth ph = FindAnyObjectByType<PlayerHealth>();   // ⭐ NEW
 
         // Trace / wall
         if (trace != null)
@@ -170,11 +169,11 @@ public class UpgradeNode : MonoBehaviour, IPointerEnterHandler, IPointerExitHand
             if (projectileSpeed) shoot.upgradeSpeed = true;
         }
 
-        // Speed / dash
+        // Speed
         if (move != null)
         {
             if (increaseSpeed)
-                move.IncreaseSpeed(move.speed * 0.10f);   // +10%
+                move.IncreaseSpeed(move.speed * 0.10f);
 
             if (unlockDash)
                 move.UnlockDash();
@@ -182,8 +181,7 @@ public class UpgradeNode : MonoBehaviour, IPointerEnterHandler, IPointerExitHand
             if (unlockDoubleDash)
                 move.UnlockDoubleDash();
         }
-
-        Debug.Log("Purchased upgrade: " + name);
+       
     }
 
     // =========================

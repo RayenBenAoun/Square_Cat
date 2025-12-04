@@ -3,68 +3,87 @@ using System.Collections;
 
 public class SpikeDamage : MonoBehaviour
 {
-    public EnemyColor projectileColor;
-
-    private bool isAttached = false;
     private bool damageActive = false;
     private Rigidbody2D rb;
     private Collider2D col;
+    private SpriteRenderer sr;
 
     private EnemyColor spikeColor = EnemyColor.None;
-    private SpriteRenderer sr;
 
     void Awake()
     {
         rb = GetComponent<Rigidbody2D>();
         col = GetComponent<Collider2D>();
         sr = GetComponent<SpriteRenderer>();
+
+        if (col != null)
+            col.isTrigger = false;   // ⭐ CRITICAL: must be solid collider
     }
 
+    // Called when attached to wall BEFORE launch
     public void AttachToWall(EdgeCollider2D wall, Vector2 normal)
     {
-        isAttached = true;
-        damageActive = false;
+        if (rb != null)
+        {
+            rb.isKinematic = true;
+            rb.linearVelocity = Vector2.zero;
+        }
 
-        rb.isKinematic = true;
-        rb.linearVelocity = Vector2.zero;
-
-        Physics2D.IgnoreCollision(col, wall, true);
+        // Temporarily ignore the wall collider only
+        if (col != null)
+            Physics2D.IgnoreCollision(col, wall, true);
     }
 
     public void SetSpikeColor(EnemyColor color)
     {
         spikeColor = color;
+
         if (sr != null)
             sr.color = ColorFor(color);
     }
 
-    public void Launch()
+    public void Launch(Vector2 direction, float speed)
     {
-        isAttached = false;
-        rb.isKinematic = false;
-        rb.linearVelocity = transform.up * 11f;
-        StartCoroutine(EnableCollisionAfterDelay());
+        if (rb != null)
+        {
+            rb.isKinematic = false;
+            rb.linearVelocity = direction.normalized * speed;
+        }
+
+        // ⭐ ACTIVATE DAMAGE after small delay so it doesn't hit the wall instantly
+        StartCoroutine(ActivateDamage());
+
+        // Projectiles despawn eventually
         Destroy(gameObject, 3f);
     }
 
-    private IEnumerator EnableCollisionAfterDelay()
+    private IEnumerator ActivateDamage()
     {
-        yield return new WaitForSeconds(0.15f);
+        yield return new WaitForSeconds(0.1f);
+
         damageActive = true;
+
+        // Allow collisions with EVERYTHING again
+        foreach (Collider2D other in FindObjectsOfType<Collider2D>())
+        {
+            Physics2D.IgnoreCollision(col, other, false);
+        }
     }
 
-    void OnCollisionEnter2D(Collision2D col2)
+    void OnCollisionEnter2D(Collision2D c)
     {
         if (!damageActive) return;
 
-        var enemy = col2.collider.GetComponentInParent<EnemyHealth>();
+        EnemyHealth enemy = c.collider.GetComponentInParent<EnemyHealth>();
+
         if (enemy != null)
         {
-            enemy.OnProjectileHit(projectileColor);
+            enemy.ApplySpikeDamage(1);
             Destroy(gameObject);
             return;
         }
 
+        // Hit anything else → destroy spike
         Destroy(gameObject);
     }
 
@@ -76,7 +95,7 @@ public class SpikeDamage : MonoBehaviour
             case EnemyColor.Blue: return Color.blue;
             case EnemyColor.Green: return Color.green;
             case EnemyColor.Yellow: return Color.yellow;
-            default: return Color.white;
         }
+        return Color.white;
     }
 }

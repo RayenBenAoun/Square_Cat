@@ -66,7 +66,21 @@ public class Projectile : MonoBehaviour
 
     void OnTriggerEnter2D(Collider2D collision)
     {
-        // DRAGON HIT
+        // ⭐ ADD — Player takes knockback + flash + hurt sound
+        if (collision.CompareTag("Player"))
+        {
+            PlayerMovement pm = collision.GetComponent<PlayerMovement>();
+            if (pm != null)
+            {
+                Vector2 dir = (collision.transform.position - transform.position).normalized;
+                pm.TakeHit(dir);
+            }
+
+            Destroy(gameObject);
+            return;
+        }
+
+        // Dragon hit
         DragonAI dragon = collision.GetComponentInParent<DragonAI>();
         if (dragon != null)
         {
@@ -75,7 +89,7 @@ public class Projectile : MonoBehaviour
             return;
         }
 
-        // NORMAL ENEMY HIT
+        // Enemy hit
         EnemyHealth enemy = collision.GetComponentInParent<EnemyHealth>();
         if (enemy != null)
         {
@@ -84,6 +98,7 @@ public class Projectile : MonoBehaviour
             return;
         }
     }
+
 
 
 }
