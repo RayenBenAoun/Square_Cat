@@ -4,51 +4,83 @@ using TMPro;
 public class WaveStarter : MonoBehaviour
 {
     public TextMeshProUGUI prompt;
-    private bool playerInside = false;
+    public GameObject statueSprite;
 
+    private Collider2D col;
+    private bool playerInside = false;
 
     private void Start()
     {
-        if (prompt != null)
-            prompt.gameObject.SetActive(false);
+        col = GetComponent<Collider2D>();
 
-        ArenaWaveManager.Instance.OnWaveEnded += ReEnableStatue;
+        prompt.gameObject.SetActive(false);
+        statueSprite.SetActive(true);
+        col.enabled = true;
+
+        // 🔥 THE FIX: Subscribe HERE, not Awake()
+        if (ArenaWaveManager.Instance != null)
+        {
+            Debug.Log("WaveStarter subscribed to events.");
+            ArenaWaveManager.Instance.OnWaveStarted += HideInteractable;
+            ArenaWaveManager.Instance.OnWaveEnded += ShowInteractable;
+        }
+        else
+        {
+            Debug.LogError("ArenaWaveManager.Instance is NULL in Start()");
+        }
+    }
+
+    private void OnDestroy()
+    {
+        if (ArenaWaveManager.Instance != null)
+        {
+            ArenaWaveManager.Instance.OnWaveStarted -= HideInteractable;
+            ArenaWaveManager.Instance.OnWaveEnded -= ShowInteractable;
+        }
     }
 
     private void Update()
     {
         if (playerInside && Input.GetKeyDown(KeyCode.X))
         {
-            Debug.Log("Wave Start Triggered");
-            prompt.gameObject.SetActive(false);
-
-            // hide this object
-            gameObject.SetActive(false);
-
+            HideInteractable();
             ArenaWaveManager.Instance.StartWave();
         }
     }
 
-    private void OnTriggerEnter2D(Collider2D col)
+    void HideInteractable()
     {
-        if (col.CompareTag("Player"))
-        {
-            playerInside = true;
+        Debug.Log("Hiding interactable...");
+        statueSprite.SetActive(false);
+        col.enabled = false;
+        prompt.gameObject.SetActive(false);
+    }
+
+    void ShowInteractable()
+    {
+        Debug.Log("SHOWING interactable!");
+        statueSprite.SetActive(true);
+        col.enabled = true;
+
+        if (playerInside)
             prompt.gameObject.SetActive(true);
-        }
     }
 
-    private void OnTriggerExit2D(Collider2D col)
+    private void OnTriggerEnter2D(Collider2D other)
     {
-        if (col.CompareTag("Player"))
-        {
-            playerInside = false;
-            prompt.gameObject.SetActive(false);
-        }
+        playerInside = true;
+        if (statueSprite.activeSelf)
+            prompt.gameObject.SetActive(true);
     }
 
-    void ReEnableStatue()
+    private void OnTriggerExit2D(Collider2D other)
+    {
+        playerInside = false;
+        prompt.gameObject.SetActive(false);
+    }
+    public void ResetStarter()
     {
         gameObject.SetActive(true);
     }
+
 }

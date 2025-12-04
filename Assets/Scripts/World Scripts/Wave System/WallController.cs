@@ -8,19 +8,16 @@ public class ArenaWallController : MonoBehaviour
     {
         wallParent.SetActive(false);
 
-        ArenaWaveManager.Instance.OnWaveStarted += CloseArena;
-        ArenaWaveManager.Instance.OnWaveEnded += OpenArena;
-    }
+        ArenaWaveManager.Instance.OnWaveStarted += () =>
+        {
+            Debug.Log("WALL ACTIVE");
+            wallParent.SetActive(true);
+        };
 
-    void CloseArena()
-    {
-        Debug.Log("WALL ACTIVE");
-        wallParent.SetActive(true);
-    }
-
-    void OpenArena()
-    {
-        Debug.Log("WALL REMOVED");
-        wallParent.SetActive(false);
+        ArenaWaveManager.Instance.OnWaveEnded += () =>
+        {
+            Debug.Log("WALL REMOVED");
+            wallParent.SetActive(false);
+        };
     }
 }

@@ -1,6 +1,6 @@
-﻿using UnityEngine;
+﻿using System.Collections;
+using UnityEngine;
 using UnityEngine.SceneManagement;
-using System.Collections;
 
 public class PlayerHealth : MonoBehaviour
 {
@@ -9,14 +9,16 @@ public class PlayerHealth : MonoBehaviour
     public int currentHealth;
 
     [Header("UI References")]
-    [SerializeField] private UIHearts uiHearts;      // ← drag Hearts object (with UIHearts) here
-    public GameObject deathScreen;                   // ← drag your DeathScreen panel here
+    [SerializeField] private UIHearts uiHearts;
+
+    // These are no longer used but kept so your inspector doesn't freak out
+    public GameObject deathScreen;
+    public Transform respawnPoint;
 
     private bool isDead = false;
 
     void Awake()
     {
-        // If not assigned in Inspector, fallback to safe find (works if UI starts inactive)
         if (uiHearts == null)
             uiHearts = FindFirstObjectByType<UIHearts>(FindObjectsInactive.Include);
     }
@@ -25,19 +27,20 @@ public class PlayerHealth : MonoBehaviour
     {
         currentHealth = Mathf.Max(1, maxHealth);
 
-        // Build + draw hearts
         if (uiHearts != null)
         {
             uiHearts.Build(maxHealth);
             uiHearts.UpdateHearts(currentHealth, maxHealth);
         }
 
-        if (deathScreen != null) deathScreen.SetActive(false);
-
-        // Ensure gameplay isn't frozen from a previous pause
-        Time.timeScale = 1f;
+        // We DO NOT touch timeScale here anymore
+        if (deathScreen != null)
+            deathScreen.SetActive(false);
     }
 
+    // =========================
+    // DAMAGE
+    // =========================
     public void TakeDamage(int amount)
     {
         if (isDead) return;
@@ -48,23 +51,34 @@ public class PlayerHealth : MonoBehaviour
             uiHearts.UpdateHearts(currentHealth, maxHealth);
 
         if (currentHealth <= 0)
-            StartCoroutine(DieRoutine());
+        {
+            DieAndRestartScene();
+        }
     }
 
+    // =========================
+    // HEAL
+    // =========================
     public void Heal(int amount)
     {
         if (isDead) return;
+
         currentHealth = Mathf.Clamp(currentHealth + Mathf.Abs(amount), 0, maxHealth);
+
         if (uiHearts != null)
             uiHearts.UpdateHearts(currentHealth, maxHealth);
     }
 
+    // =========================
+    // MAX HEALTH / UPGRADES
+    // =========================
     public void SetMaxHealth(int newMax, bool keepRatio = false)
     {
         newMax = Mathf.Max(1, newMax);
+
         if (keepRatio)
         {
-            float ratio = (maxHealth > 0) ? (float)currentHealth / maxHealth : 1f;
+            float ratio = maxHealth > 0 ? (float)currentHealth / maxHealth : 1f;
             maxHealth = newMax;
             currentHealth = Mathf.Clamp(Mathf.RoundToInt(ratio * maxHealth), 0, maxHealth);
         }
@@ -81,26 +95,27 @@ public class PlayerHealth : MonoBehaviour
         }
     }
 
-    private IEnumerator DieRoutine()
+    // =========================
+    // DEATH → RELOAD SCENE
+    // =========================
+    private void DieAndRestartScene()
     {
-        if (isDead) yield break;
         isDead = true;
 
-        if (deathScreen != null)
-            deathScreen.SetActive(true);
-        else
-            Debug.LogWarning("Death screen is not assigned!");
+        // Just in case anything messed with timeScale
+        Time.timeScale = 1f;
 
-        // Let UI draw one frame, then pause gameplay
-        yield return null;
-        Time.timeScale = 0f;
+        // Reload the current scene from the beginning
+        Scene current = SceneManager.GetActiveScene();
+        SceneManager.LoadScene(current.buildIndex);
     }
 
-    // UI Buttons
+    // Optional buttons still work if you use them in menus
     public void RestartGame()
     {
         Time.timeScale = 1f;
-        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+        Scene scene = SceneManager.GetActiveScene();
+        SceneManager.LoadScene(scene.buildIndex);
     }
 
     public void GoToMainMenu()

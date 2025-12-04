@@ -64,6 +64,9 @@ public class PlayerShooting : MonoBehaviour
 
     void Shoot(GameObject prefab)
     {
+        // ⭐ NEW — play shooting sound
+        PlayerAudio.Instance.Play(PlayerAudio.Instance.shootSFX);
+
         Vector2 mouseWorld = cam.ScreenToWorldPoint(Mouse.current.position.ReadValue());
         Vector2 origin = transform.position;
         Vector2 dir = (mouseWorld - origin).normalized;

@@ -147,6 +147,8 @@ public class PlayerOutline : MonoBehaviour
 
     void StartDraw()
     {
+        PlayerAudio.Instance.Play(PlayerAudio.Instance.traceStartSFX);
+
         drawing = true;
         points.Clear();
         lr.positionCount = 0;
@@ -219,6 +221,8 @@ public class PlayerOutline : MonoBehaviour
 
     void CloseAndResolve()
     {
+        PlayerAudio.Instance.Play(PlayerAudio.Instance.traceEndSFX);
+
         drawing = false;
         Vector2 first = points[0];
         points[^1] = first;
@@ -275,6 +279,10 @@ public class PlayerOutline : MonoBehaviour
 
     void ShootSpikesOutward()
     {
+        // Only play sound when spikes actually shoot
+        if (activeCover != null && spikeShotUpgrade)
+            PlayerAudio.Instance.Play(PlayerAudio.Instance.spikeShootSFX);
+
         if (!spikeShotUpgrade) return;
         if (activeCover == null) return;
 

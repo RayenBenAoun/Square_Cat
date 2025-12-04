@@ -4,8 +4,8 @@ public class PlayerCurrency : MonoBehaviour
 {
     public static PlayerCurrency Instance;
 
-    [Header("Collected Lightning Bolts")]
-    public int lightningBolts = 0;
+    [Header("Player Currency")]
+    [SerializeField] public int lightningBolts = 0; // editable in inspector
 
     private void Awake()
     {

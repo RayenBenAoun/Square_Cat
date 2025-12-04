@@ -42,10 +42,14 @@ public class SpikedWall : MonoBehaviour
             Collider2D col = spike.GetComponent<Collider2D>();
             if (col == null) col = spike.AddComponent<BoxCollider2D>();
 
+            // ORIGINAL NORMAL CALCULATION (unchanged)
             Vector2 normal = new Vector2(-(p2.y - p1.y), p2.x - p1.x).normalized;
             spike.transform.up = normal;
+
+            // ORIGINAL OFFSET (unchanged)
             spike.transform.position += (Vector3)normal * 0.13f;
 
+            // ORIGINAL SpikeDamage setup
             SpikeDamage sd = spike.GetComponent<SpikeDamage>();
             sd.AttachToWall(wallCol, normal);
             sd.SetSpikeColor(wallColor);
@@ -66,9 +70,14 @@ public class SpikedWall : MonoBehaviour
     {
         foreach (var spike in spikes)
         {
+            if (spike == null) continue;
+
             SpikeDamage sd = spike.GetComponent<SpikeDamage>();
-            sd.Launch();
+
+            // 🔥 UPDATED ONLY THIS LINE — direction + speed
+            sd.Launch(spike.transform.up, 11f);
         }
+
         spikes.Clear();
     }
 }

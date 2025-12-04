@@ -1,46 +1,42 @@
-using UnityEngine;
+﻿using UnityEngine;
 using TMPro;
 using System.Collections;
 
-public class UIWaveText : MonoBehaviour
+public class UIWaveAnnouncer : MonoBehaviour
 {
-    public static UIWaveText Instance;
+    public static UIWaveAnnouncer Instance;
 
-    public TextMeshProUGUI waveText;
+    [SerializeField] TMP_Text announceText;
 
     void Awake()
     {
         Instance = this;
-        waveText.gameObject.SetActive(false);
     }
 
-    public void ShowWaveNumber(int waveNum)
+    void OnEnable()
     {
-        StartCoroutine(ShowWaveRoutine(waveNum));
+        ArenaWaveManager.Instance.OnWaveStarted += Announce;
     }
 
-    IEnumerator ShowWaveRoutine(int waveNum)
+    void OnDisable()
     {
-        waveText.text = $"WAVE {waveNum}";
-        waveText.alpha = 0;
-        waveText.gameObject.SetActive(true);
+        if (ArenaWaveManager.Instance != null)
+            ArenaWaveManager.Instance.OnWaveStarted -= Announce;
+    }
 
-        // fade in
-        for (float t = 0; t < 1; t += Time.deltaTime * 2)
-        {
-            waveText.alpha = t;
-            yield return null;
-        }
+    // MUST MATCH: Action → void Announce()
+    void Announce()
+    {
+        StartCoroutine(ShowAnnouncement());
+    }
 
-        yield return new WaitForSeconds(1.2f);
+    IEnumerator ShowAnnouncement()
+    {
+        announceText.text = "Wave " + ArenaWaveManager.Instance.currentWave + "!";
+        announceText.gameObject.SetActive(true);
 
-        // fade out
-        for (float t = 1; t > 0; t -= Time.deltaTime * 2)
-        {
-            waveText.alpha = t;
-            yield return null;
-        }
+        yield return new WaitForSeconds(2f);
 
-        waveText.gameObject.SetActive(false);
+        announceText.gameObject.SetActive(false);
     }
 }

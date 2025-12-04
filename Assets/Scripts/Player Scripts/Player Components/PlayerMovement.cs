@@ -5,25 +5,32 @@ using System.Collections;
 public class PlayerMovement : MonoBehaviour
 {
     [Header("Base Movement")]
-    public float speed = 4f;          // base move speed
+    public float speed = 4f;
     private Vector2 moveDir;
     private Rigidbody2D rb;
     private Animator animator;
 
     [Header("Dash Ability")]
-    public bool canDash = false;      // unlocked by upgrade
+    public bool canDash = false;
     public bool dashInvincible = false;
-    public bool doubleDash = false;   // unlocked by upgrade
+    public bool doubleDash = false;
     public float dashSpeed = 12f;
     public float dashDuration = 0.18f;
     public float dashCooldown = 0.75f;
 
     private bool isDashing = false;
     private bool dashOnCooldown = false;
-    private int remainingDashes = 1;  // 1 normally, 2 if doubleDash
+    private int remainingDashes = 1;
 
     private int playerLayer;
     private int invincibleLayer;
+
+    // ⭐ NEW — Hit feedback
+    [Header("Hit Feedback")]
+    public float knockbackForce = 6f;
+    public float flashTime = 0.1f;
+    private SpriteRenderer sr;
+    private Color originalColor;
 
     private void Awake()
     {
@@ -34,15 +41,17 @@ public class PlayerMovement : MonoBehaviour
         invincibleLayer = LayerMask.NameToLayer("Invincible");
 
         remainingDashes = 1;
+
+        // Flash on hit
+        sr = GetComponentInChildren<SpriteRenderer>();
+        if (sr != null) originalColor = sr.color;
     }
 
     private void Update()
     {
-        // normal movement when not mid-dash
         if (!isDashing)
             HandleMovement();
 
-        // dash input
         if (canDash && Input.GetKeyDown(KeyCode.F))
         {
             if (!dashOnCooldown && remainingDashes > 0)
@@ -54,29 +63,11 @@ public class PlayerMovement : MonoBehaviour
     {
         moveDir = Vector2.zero;
 
-        // horizontal
-        if (Input.GetKey(KeyCode.A))
-        {
-            moveDir.x = -1;
-            animator.SetInteger("Direction", 3); // left
-        }
-        else if (Input.GetKey(KeyCode.D))
-        {
-            moveDir.x = 1;
-            animator.SetInteger("Direction", 2); // right
-        }
+        if (Input.GetKey(KeyCode.A)) { moveDir.x = -1; animator.SetInteger("Direction", 3); }
+        else if (Input.GetKey(KeyCode.D)) { moveDir.x = 1; animator.SetInteger("Direction", 2); }
 
-        // vertical
-        if (Input.GetKey(KeyCode.W))
-        {
-            moveDir.y = 1;
-            animator.SetInteger("Direction", 1); // up
-        }
-        else if (Input.GetKey(KeyCode.S))
-        {
-            moveDir.y = -1;
-            animator.SetInteger("Direction", 0); // down
-        }
+        if (Input.GetKey(KeyCode.W)) { moveDir.y = 1; animator.SetInteger("Direction", 1); }
+        else if (Input.GetKey(KeyCode.S)) { moveDir.y = -1; animator.SetInteger("Direction", 0); }
 
         moveDir.Normalize();
         animator.SetBool("IsMoving", moveDir.sqrMagnitude > 0f);
@@ -89,12 +80,13 @@ public class PlayerMovement : MonoBehaviour
         isDashing = true;
         remainingDashes--;
 
-        // if we used our last dash, start cooldown after this dash finishes
         if (remainingDashes <= 0)
             dashOnCooldown = true;
 
-        // default dash direction if standing still
         Vector2 dashVector = moveDir == Vector2.zero ? Vector2.down : moveDir;
+
+        // ⭐ PLAY DASH SOUND EXACTLY ONCE PER DASH
+        PlayerAudio.Instance.Play(PlayerAudio.Instance.dashSFX);
 
         if (dashInvincible)
             gameObject.layer = invincibleLayer;
@@ -108,7 +100,6 @@ public class PlayerMovement : MonoBehaviour
 
         isDashing = false;
 
-        // only wait cooldown when we’ve exhausted our dashes
         if (dashOnCooldown)
         {
             yield return new WaitForSeconds(dashCooldown);
@@ -117,30 +108,31 @@ public class PlayerMovement : MonoBehaviour
         }
     }
 
-    // ===== called by upgrades =====
-
-    // +amount is absolute; if you want +10% per node, call IncreaseSpeed(speed * 0.1f)
-    public void IncreaseSpeed(float amount)
+    // ========================
+    // ⭐ NEW HIT FEEDBACK API
+    // ========================
+    public void TakeHit(Vector2 hitDirection)
     {
-        speed += amount;
+        rb.linearVelocity = hitDirection.normalized * knockbackForce;
+
+        if (sr != null)
+            StartCoroutine(FlashRed());
+
+        // ⭐ PLAY HURT SOUND
+        PlayerAudio.Instance.Play(PlayerAudio.Instance.hurtSFX);
     }
 
-    public void UnlockDash()
+    private IEnumerator FlashRed()
     {
-        canDash = true;
-        remainingDashes = 1;
+        sr.color = Color.red;
+        yield return new WaitForSeconds(flashTime);
+        sr.color = originalColor;
     }
 
-    public void UnlockDoubleDash()
-    {
-        doubleDash = true;
-        // if dash already unlocked, immediately allow 2 dashes
-        if (canDash)
-            remainingDashes = 2;
-    }
+    // ===== UPGRADE HOOKS (unchanged) =====
 
-    public void UnlockDashInvincibility()
-    {
-        dashInvincible = true;
-    }
+    public void IncreaseSpeed(float amount) => speed += amount;
+    public void UnlockDash() { canDash = true; remainingDashes = 1; }
+    public void UnlockDoubleDash() { doubleDash = true; if (canDash) remainingDashes = 2; }
+    public void UnlockDashInvincibility() => dashInvincible = true;
 }

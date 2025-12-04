@@ -11,7 +11,9 @@ public class EnemyHealth : MonoBehaviour
     public EnemyColor enemyColor;
     public bool downed = false;
 
-    // One simple event: called when this enemy dies
+    [Header("Currency Reward")]
+    public int rewardAmount = 1;
+
     public event System.Action OnEnemyDied;
 
     private EnemyState state = EnemyState.Alive;
@@ -19,8 +21,10 @@ public class EnemyHealth : MonoBehaviour
 
     private SpriteRenderer spriteRenderer;
     private Color originalColor;
+
     public float flashInterval = 0.2f;
     public float downedDuration = 3f;
+
     private Coroutine flashRoutine;
     private Coroutine downedRoutine;
 
@@ -31,6 +35,22 @@ public class EnemyHealth : MonoBehaviour
         rb = GetComponent<Rigidbody2D>();
         spriteRenderer = GetComponentInChildren<SpriteRenderer>();
         originalColor = spriteRenderer.color;
+
+        // Notify wave manager on death
+        OnEnemyDied += () =>
+        {
+            if (ArenaWaveManager.Instance != null)
+                ArenaWaveManager.Instance.EnemyDied();
+        };
+    }
+
+    // ----------------------------------------------------
+    // ★ New: AI scaling uses this safely
+    // ----------------------------------------------------
+    public void SetMaxHealth(int value)
+    {
+        MaxHealth = value;
+        Health = Mathf.Clamp(Health, 0, MaxHealth);
     }
 
     public bool IsCurrentlyDowned()
@@ -42,19 +62,15 @@ public class EnemyHealth : MonoBehaviour
     {
         if (IsDead) return;
 
-        // First phase: take 3 hits, then go downed
         if (!IsCurrentlyDowned())
         {
             Health--;
-
             if (Health <= 0)
                 EnterDownedState();
         }
-        // Second phase: if downed, only matching color kills
-        else
+        else if (hitColor == enemyColor)
         {
-            if (hitColor == enemyColor)
-                KillEnemy();
+            KillEnemy();
         }
     }
 
@@ -81,6 +97,7 @@ public class EnemyHealth : MonoBehaviour
         state = EnemyState.Alive;
         downed = false;
         Health = MaxHealth;
+
         spriteRenderer.color = originalColor;
     }
 
@@ -115,9 +132,28 @@ public class EnemyHealth : MonoBehaviour
 
         state = EnemyState.Dead;
 
-        // Tell the wave system “this enemy died”
+        // give currency
+        if (PlayerCurrency.Instance != null)
+            PlayerCurrency.Instance.AddBolts(rewardAmount);
+
         OnEnemyDied?.Invoke();
 
         Destroy(gameObject);
+    }
+
+    public void ApplySpikeDamage(int amount)
+    {
+        if (IsDead) return;
+
+        if (!IsCurrentlyDowned())
+        {
+            Health -= amount;
+            if (Health <= 0)
+                EnterDownedState();
+        }
+        else
+        {
+            KillEnemy();
+        }
     }
 }

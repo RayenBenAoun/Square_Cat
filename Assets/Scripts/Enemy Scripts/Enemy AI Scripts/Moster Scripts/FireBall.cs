@@ -1,40 +1,56 @@
-using UnityEngine;
+﻿using UnityEngine;
 
 public class DragonFireball : MonoBehaviour
 {
-    public float speed = 8f;
-    public int damage = 1;
-    public float lifeTime = 4f;
+    public float speed = 7f;
+    public float lifetime = 6f;
+    public float playerDamage = 1f;
 
     Rigidbody2D rb;
 
+    private void Awake()
+    {
+        rb = GetComponent<Rigidbody2D>();
+    }
+
+    private void Start()
+    {
+        Destroy(gameObject, lifetime);
+    }
+
+    // Called by DragonAI
     public void Launch(Vector2 dir)
     {
-        if (rb == null)
-            rb = GetComponent<Rigidbody2D>();
-
-        rb.gravityScale = 0;
-        rb.linearVelocity = dir.normalized * speed;
-        Destroy(gameObject, lifeTime);
+        dir.Normalize();
+        rb.linearVelocity = dir * speed;
     }
 
     private void OnTriggerEnter2D(Collider2D other)
     {
-        // Ignore dragon itself
-        if (other.GetComponent<DragonAI>())
+        // Ignore dragon
+        if (other.CompareTag("Enemy"))
             return;
 
-        // Hit player
-        PlayerHealth player = other.GetComponentInParent<PlayerHealth>();
-        if (player != null)
+        // Ignore perch wall
+        if (other.CompareTag("DragonWall"))
+            return;
+
+        // Hit Player
+        if (other.CompareTag("Player"))
         {
-            player.TakeDamage(damage);
+            PlayerHealth ph = other.GetComponent<PlayerHealth>();
+            if (ph != null)
+                ph.TakeDamage((int)playerDamage);
+
             Destroy(gameObject);
             return;
         }
 
-        // Hit walls / environment
-        if (!other.isTrigger)
+        // Hit any solid object → destroy
+        if (other.gameObject.layer == LayerMask.NameToLayer("Wall"))
+        {
             Destroy(gameObject);
+            return;
+        }
     }
 }

@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 using TMPro;
 
 public class WaveRomanUI : MonoBehaviour
@@ -7,19 +7,43 @@ public class WaveRomanUI : MonoBehaviour
 
     public TextMeshProUGUI waveCounter;
 
+    private bool subscribed = false;
+
     private void Awake()
     {
         Instance = this;
     }
 
-    public void UpdateCounter(int wave)
+    private void Update()
     {
+        // Keep checking until ArenaWaveManager.Instance exists
+        if (!subscribed && ArenaWaveManager.Instance != null)
+        {
+            ArenaWaveManager.Instance.OnWaveStarted += HandleWave;
+            subscribed = true;
+
+            Debug.Log("WaveRomanUI: Subscribed to wave events.");
+        }
+    }
+
+    private void OnDestroy()
+    {
+        if (subscribed && ArenaWaveManager.Instance != null)
+            ArenaWaveManager.Instance.OnWaveStarted -= HandleWave;
+    }
+
+    private void HandleWave()
+    {
+        int wave = ArenaWaveManager.Instance.currentWave;
         waveCounter.text = ToRoman(wave);
+
+        Debug.Log("WaveRomanUI: Updated to wave " + wave + " → " + ToRoman(wave));
     }
 
     private string ToRoman(int number)
     {
         if (number < 1) return "";
+
         if (number >= 1000) return "M" + ToRoman(number - 1000);
         if (number >= 900) return "CM" + ToRoman(number - 900);
         if (number >= 500) return "D" + ToRoman(number - 500);
@@ -33,6 +57,7 @@ public class WaveRomanUI : MonoBehaviour
         if (number >= 5) return "V" + ToRoman(number - 5);
         if (number >= 4) return "IV" + ToRoman(number - 4);
         if (number >= 1) return "I" + ToRoman(number - 1);
+
         return "";
     }
 }
